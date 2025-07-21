@@ -1,0 +1,55 @@
+<main>
+  <div class="container">
+  <div class="main-header">
+    <h2 id="titulo-principal" class="titulo-principal">Todos los productos</h2>
+    <form id="filtros-form" method="GET" action="/">
+      <label for="limit">Productos por página:</label>
+      <select name="limit" id="limit">
+        <option value="5">5</option>
+        <option value="10" selected>10</option>
+        <option value="20">20</option>
+      </select>
+
+      <label for="sort">Orden:</label>
+      <select name="sort" id="sort">
+        <option value="">Sin orden</option>
+        <option value="asc">Precio ascendente</option>
+        <option value="desc">Precio descendente</option>
+      </select>
+
+    </form>
+
+  </div>
+<div id="productos-y-paginacion">
+  <div id="contenedor-productos" class="row">
+    {{#each products}}
+      <div class="col-12 col-sm-6 col-lg-6 mb-4">
+      <div class="producto tarjeta-horizontal">
+        <div class="producto-imagen-container">
+          <img class="producto-imagen" src="{{firstThumbnail thumbnails}}" alt="{{title}}" />
+        </div>
+        <div class="producto-detalle">
+          <h5 class="producto-titulo">{{title}}</h5>
+          <p class="producto-precio">${{price}}</p>
+          <button class="producto-agregar" data-id="{{_id}}">Agregar al carrito</button>
+        </div>
+      </div>
+    </div>
+    {{/each}}
+
+  </div>
+<div class="paginacion">
+  {{#if hasPrevPage}}
+    <a href="/?page={{prevPage}}{{#if query}}&query={{query}}{{/if}}{{#if sort}}&sort={{sort}}{{/if}}{{#if limit}}&limit={{limit}}{{/if}}">Anterior</a>
+  {{/if}}
+
+  <span>Página {{page}}</span>
+
+  {{#if hasNextPage}}
+    <a href="/?page={{nextPage}}{{#if query}}&query={{query}}{{/if}}{{#if sort}}&sort={{sort}}{{/if}}{{#if limit}}&limit={{limit}}{{/if}}">Siguiente</a>
+  {{/if}}
+</div>
+</div>
+</div>
+</main>
+<script type="module" src="/js/home.js"></script>

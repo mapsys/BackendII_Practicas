@@ -1,0 +1,54 @@
+<main class="contenedor-carrito">
+  <h2 class="titulo-principal">Carrito</h2>
+  {{#if productos.length}}
+    <div id="carrito-productos" class="carrito-productos">
+      {{#each productos}}
+        <div class="carrito-producto">
+          <img class="carrito-imagen" src="{{this.thumbnail}}" alt="{{this.title}}" />
+
+          <div class="carrito-producto-titulo">
+            <small>Nombre</small>
+            <h3>{{this.title}}</h3>
+          </div>
+
+          <div class="carrito-producto-cantidad">
+            <small>Cantidad</small>
+            <p>{{this.quantity}}</p>
+          </div>
+
+          <div class="carrito-producto-precio">
+            <small>Precio</small>
+            <p>${{this.price}}</p>
+          </div>
+
+          <div class="carrito-producto-subtotal">
+            <small>Subtotal</small>
+            <p>${{this.subtotal}}</p>
+          </div>
+
+          <button class="carrito-producto-eliminar" data-id="{{this.id}}">
+            <i class="bi bi-trash-fill"></i>
+          </button>
+        </div>
+      {{/each}}
+    </div>
+
+    <p id="carrito-comprado" class="carrito-comprado disable">Gracias por tu compra <i class="bi bi-emoji-smile"></i></p>
+
+    <div id="carrito-acciones" class="carrito-acciones">
+      <div class="carrito-acciones-izquierda">
+        <button id="carrito-acciones-vaciar" class="carrito-acciones-vaciar">Vaciar Carrito</button>
+      </div>
+      <div class="carrito-acciones-derecha">
+        <div class="carrito-acciones-total">
+          <p>Total:</p>
+          <p id="carrito-total">${{total}}</p>
+        </div>
+        <button id="carrito-acciones-comprar" class="carrito-acciones-comprar">Comprar Ahora</button>
+      </div>
+    </div>
+  {{else}}
+    <p id="carrito-vacio" class="carrito-vacio">Tu carrito está vacío <i class="bi bi-emoji-frown"></i></p>
+  {{/if}}
+</main>
+<script type="module" src="/js/cartDetail.js"></script>

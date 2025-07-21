@@ -1,0 +1,65 @@
+<section class="realTimeMainSection">
+  <div class="header realTimeHeader">
+    <h1>Productos en tiempo real</h1>
+    <a href="/" class="realTimeView">
+      <button type="button">Volver al home</button>
+    </a>
+  </div>
+  <h2>Agregar producto</h2>
+  <form id="add-product-form" class="add-product-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="title">Título</label>
+        <input type="text" id="title" required />
+      </div>
+      <div class="form-group">
+        <label for="description">Descripción</label>
+        <input type="text" id="description" required />
+      </div>
+      <div class="form-group">
+        <label for="price">Precio</label>
+        <input type="number" id="price" required />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="thumbnail">Thumbnail</label>
+        <input type="text" id="thumbnail" />
+      </div>
+      <div class="form-group">
+        <label for="code">Código</label>
+        <input type="text" id="code" required />
+      </div>
+      <div class="form-group">
+        <label for="stock">Stock</label>
+        <input type="number" id="stock" required />
+      </div>
+      <div class="form-group">
+        <label for="category">Categoría</label>
+        <select id="category" required>
+          <option value="" disabled selected>Seleccionar</option>
+          <option value="Chocolates">Chocolates</option>
+          <option value="Aromatizantes">Aromatizantes</option>
+          <option value="Espatulas">Espatulas</option>
+          <option value="Moldes">Moldes</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row end">
+      <button type="submit" class="submit-btn">Agregar producto</button>
+    </div>
+  </form>
+
+  <dic class="headerLista">
+    <h2>Lista de productos</h2>
+    <h3 id="product-count">Total de productos: 0</h3>
+  </dic>
+  <div id="product-list" class="realtime-productos">
+
+  </div>
+  <footer>© copyright 2024 - Mariano Pisano</footer>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/realtime.js"></script>
+</section>
