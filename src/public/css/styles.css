@@ -687,3 +687,77 @@ main {
     padding: 1.5rem;
   }
 }
+
+/* Formularios de login y registro */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.form input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form button {
+  background-color: var(--clr-main);
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.form button:hover {
+  background-color: var(--clr-main-light);
+}
+
+.message {
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: bold;
+  color: crimson;
+}
+
+/* logout */
+/* === Botones genéricos para acciones === */
+.boton-primary {
+  background-color: var(--clr-main);
+  color: var(--clr-white);
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.boton-primary:hover {
+  background-color: var(--clr-main-light);
+}
+
+.boton-secondary {
+  background-color: transparent;
+  color: var(--clr-main);
+  padding: 0.75rem 1.25rem;
+  border: 2px solid var(--clr-main);
+  border-radius: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.boton-secondary:hover {
+  background-color: var(--clr-main);
+  color: var(--clr-white);
+}

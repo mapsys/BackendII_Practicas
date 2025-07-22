@@ -1,0 +1,25 @@
+<main>
+  <h2>Registro de usuario</h2>
+
+  <form id="registerForm" class="form">
+    <label>Nombre</label>
+    <input type="text" name="name" required />
+
+    <label>Apellido</label>
+    <input type="text" name="lastName" required />
+
+    <label>Email</label>
+    <input type="email" name="email" required pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" title="Ingresa un e-mail válido, por ejemplo usuario@dominio.com" />
+
+    <label>Contraseña</label>
+    <input type="password" name="password" required />
+
+    <button type="submit">Registrarse</button>
+  </form>
+
+  <p>¿Ya tenés cuenta? <a href="/login">Iniciá sesión</a></p>
+
+  <div id="registerMessage" class="message"></div>
+
+</main>
+<script type="module" src="/js/register.js"></script>

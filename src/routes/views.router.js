@@ -1,10 +1,10 @@
 // src/routes/views.router.js
 import { Router } from "express";
-
+import { requireAuth, adminOnly } from "../middlewares/auth.js";
 export default function viewsRouter(productManager, cartManager) {
   const router = Router();
 
-  router.get("/", async (req, res) => {
+  router.get("/", requireAuth, async (req, res) => {
     try {
       const { limit = 10, page = 1, sort, query } = req.query;
 
@@ -38,18 +38,19 @@ export default function viewsRouter(productManager, cartManager) {
         sort,
         limit,
         title: "My eCommerce",
+        user: req.session.user,
       });
     } catch (error) {
       res.status(500).send("Error al cargar productos");
     }
   });
 
-  router.get("/realtimeproducts", async (req, res) => {
+  router.get("/realtimeproducts", requireAuth, adminOnly, async (req, res) => {
     const products = await productManager.getProducts();
     res.render("realTimeProducts", { products, title: "Productos en tiempo real" });
   });
 
-  router.get("/carts/:cid", async (req, res) => {
+  router.get("/carts/:cid", requireAuth, async (req, res) => {
     const { cid } = req.params;
     try {
       const cart = await cartManager.getCartById(cid);
@@ -76,5 +77,21 @@ export default function viewsRouter(productManager, cartManager) {
     }
   });
 
+  router.get("/register", (req, res) => {
+    res.render("register"); // Handlebars busca register.handlebars
+  });
+
+  router.get("/login", (req, res) => {
+    res.render("login");
+  });
+
+  router.get("/logout", (req, res) => {
+    req.session.destroy((err) => {
+      if (err) return res.status(500).send("Error al cerrar sesión");
+
+      res.clearCookie("connect.sid"); // borra la cookie en el navegador
+      res.render("logout"); // o res.redirect("/login");
+    });
+  });
   return router;
 }

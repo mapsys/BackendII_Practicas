@@ -6,6 +6,7 @@ import { createServer } from "http";
 import ProductManager from "./src/managers/productManagerMongo.js";
 import CartManager from "./src/managers/cartManagerMongo.js";
 import productsRouter from "./src/routes/products.router.js";
+import sessionsRouter from "./src/routes/sessions.router.js";
 import cartsRouter from "./src/routes/carts.router.js";
 import viewsRouter from "./src/routes/views.router.js";
 import { Server } from "socket.io";
@@ -13,6 +14,10 @@ import { connectDB } from "./src/dbo/config.js";
 import { configureSockets } from "./src/sockets/index.js";
 import cors from "cors";
 import dotenv from "dotenv";
+import session from "express-session";
+import MongoStore from "connect-mongo";
+
+// Uso de Env para la conexion
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -53,10 +58,23 @@ app.use(express.urlencoded({ extended: true }));
 // conecto a MongoDB
 connectDB();
 
+// configuro sessions con Mongo
+app.use(
+  session({
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URL, // 👈 esto va en tu .env
+      ttl: 3600, // Tiempo de vida de la sesión en segundos (1 hora)
+    }),
+    secret: process.env.SESSION_SECRET, // 👈 elegí algo robusto
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 // Rutas
 app.use("/api/products", productsRouter(productManager));
 app.use("/api/carts", cartsRouter(cartManager, productManager));
 app.use("/", viewsRouter(productManager, cartManager));
+app.use("/api/sessions", sessionsRouter());
 
 // WebSocket connection
 configureSockets(io, productManager);
