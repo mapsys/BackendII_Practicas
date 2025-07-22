@@ -21,7 +21,7 @@ export default function cartsRouter(cartManager, productManager) {
       const totales = await cartManager.calcularTotales(cid);
       res.status(200).json(totales);
     } catch (error) {
-      res.status(500).json({ error: "Error al obtener los carritos" });
+      res.status(500).json({ error: "Error al obtener los totales" });
     }
   });
 
