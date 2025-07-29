@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import validator from "validator";
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  lastName: { type: String, required: true },
+  first_name: { type: String, required: true },
+  last_name: { type: String, required: true },
   email: {
     type: String,
     required: true,
@@ -12,10 +12,18 @@ const userSchema = new mongoose.Schema({
       message: "Email inválido",
     },
   },
+  age: { type: Number, min: 0, max: 120, required: true },
   password: { type: String, required: true },
-  role: { type: String, default: "user" },
+  cart: { type: mongoose.Schema.Types.ObjectId, ref: "Cart" },
+  role: { type: String, enum: ["user", "admin"], default: "user" },
 });
 
+// Hasheo la clave al momento de grabar
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = bcrypt.hashSync(this.password, 10);
+  next();
+});
 const User = mongoose.model("user", userSchema);
 
 export default User;

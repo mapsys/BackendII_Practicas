@@ -39,10 +39,11 @@ function conectarRegisterForm() {
       return; // aborta el envío
     }
     const data = {
-      name: form.name.value,
-      lastName: form.lastName.value,
+      first_name: form.name.value,
+      last_name: form.lastName.value,
       email: form.email.value,
       password: form.password.value,
+      age: form.age.value,
     };
     await enviarRegistro(data);
   });

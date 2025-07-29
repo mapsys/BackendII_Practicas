@@ -7,12 +7,12 @@ export default function sessionsRouter() {
   const userManager = new UserManager();
 
   router.post("/register", async (req, res) => {
-    const { name, lastName, email, password } = req.body;
-    if (!name || !lastName || !email || !password) {
+    const { first_name, last_Name, email, password, age } = req.body;
+    if (!first_name || !last_Name || !email || !password || !age) {
       return res.status(400).json({ error: "Todos los campos son obligatorios" });
     }
     try {
-      const newUser = await userManager.createUser({ name, lastName, email, password });
+      const newUser = await userManager.createUser({ first_name, last_Name, email, password, age });
       req.session.user = { _id: newUser._id, name: newUser.name, role: newUser.role };
       res.status(200).json({ mensaje: "Usuario registrado con exito" });
     } catch (err) {
