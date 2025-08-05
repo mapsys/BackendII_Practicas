@@ -1,10 +1,11 @@
 // src/routes/views.router.js
 import { Router } from "express";
-import { requireAuth, adminOnly } from "../middlewares/auth.js";
+import { auth, authAdmin } from "../middlewares/auth.js";
+import passport from "passport";
 export default function viewsRouter(productManager, cartManager) {
   const router = Router();
 
-  router.get("/", requireAuth, async (req, res) => {
+  router.get("/", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     try {
       const { limit = 10, page = 1, sort, query } = req.query;
 
@@ -38,19 +39,19 @@ export default function viewsRouter(productManager, cartManager) {
         sort,
         limit,
         title: "My eCommerce",
-        user: req.session.user,
+        user: req.user,
       });
     } catch (error) {
       res.status(500).send("Error al cargar productos");
     }
   });
 
-  router.get("/realtimeproducts", requireAuth, adminOnly, async (req, res) => {
+  router.get("/realtimeproducts", passport.authenticate("current", { session: false, failureRedirect: "/login" }), authAdmin, async (req, res) => {
     const products = await productManager.getProducts();
     res.render("realTimeProducts", { products, title: "Productos en tiempo real" });
   });
 
-  router.get("/carts/:cid", requireAuth, async (req, res) => {
+  router.get("/carts/:cid", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { cid } = req.params;
     try {
       const cart = await cartManager.getCartById(cid);
@@ -71,6 +72,7 @@ export default function viewsRouter(productManager, cartManager) {
         title: "Tu Carrito",
         productos: productosConSubtotal,
         total,
+        user: req.user,
       });
     } catch (error) {
       res.status(500).send(error.message);
@@ -85,13 +87,13 @@ export default function viewsRouter(productManager, cartManager) {
     res.render("login");
   });
 
-  router.get("/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) return res.status(500).send("Error al cerrar sesión");
+  // router.get("/logout", (req, res) => {
+  //   req.session.destroy((err) => {
+  //     if (err) return res.status(500).send("Error al cerrar sesión");
 
-      res.clearCookie("connect.sid"); // borra la cookie en el navegador
-      res.render("logout"); // o res.redirect("/login");
-    });
-  });
+  //     res.clearCookie("connect.sid"); // borra la cookie en el navegador
+  //     res.render("logout"); // o res.redirect("/login");
+  //   });
+  // });
   return router;
 }

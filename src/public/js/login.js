@@ -1,15 +1,17 @@
 async function enviarLogin(data) {
   try {
-    const res = await fetch("/api/sessions/login", {
+    const res = await fetch("/api/users/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+      credentials: "include", // 👈 esto es clave para que la cookie viaje
     });
 
     const msg = document.getElementById("loginMessage");
-
     if (res.ok) {
-      msg.textContent = "¡Bienvenido!";
+      const { usuarioLogueado } = await res.json();
+      console.log("Usuario logeado:", usuarioLogueado);
+      msg.textContent = `¡Bienvenido, ${usuarioLogueado.first_name}!`;
       setTimeout(() => (window.location.href = "/"), 1000);
     } else {
       const { error } = await res.json();

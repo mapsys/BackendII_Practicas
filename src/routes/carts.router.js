@@ -1,13 +1,14 @@
 // src/routes/carts.router.js
 import { Router } from "express";
 import mongoose from "mongoose";
+import passport from "passport";
 export default function cartsRouter(cartManager, productManager) {
   const router = Router();
-
   // GETS
-  router.get("/:id", async (req, res) => { 
+  router.get("/:id", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { id } = req.params;
     try {
+
       const cart = await cartManager.getCartById(id);
       res.status(200).json(cart);
     } catch (error) {
@@ -15,7 +16,7 @@ export default function cartsRouter(cartManager, productManager) {
     }
   });
 
-  router.get("/:cid/totales", async (req, res) => {
+  router.get("/:cid/totales", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { cid } = req.params;
     try {
       const totales = await cartManager.calcularTotales(cid);
@@ -26,7 +27,7 @@ export default function cartsRouter(cartManager, productManager) {
   });
 
   // POSTS
-  router.post("/", async (req, res) => {
+  router.post("/", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     try {
       const newCart = await cartManager.addCart();
       res.status(201).json(newCart);
@@ -35,7 +36,7 @@ export default function cartsRouter(cartManager, productManager) {
     }
   });
 
-  router.post("/:cid/product/:pid", async (req, res) => {
+  router.post("/:cid/product/:pid", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { qty } = req.body;
     const { cid, pid } = req.params;
 
@@ -49,7 +50,7 @@ export default function cartsRouter(cartManager, productManager) {
   });
 
   // DELETES
-  router.delete("/:cid/product/:pid", async (req, res) => {
+  router.delete("/:cid/product/:pid", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { cid, pid } = req.params;
     try {
       const cart = await cartManager.deleteProductFromCart(cid, pid);
@@ -59,7 +60,7 @@ export default function cartsRouter(cartManager, productManager) {
     }
   });
 
-  router.delete("/:cid", async (req, res) => {
+  router.delete("/:cid", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { cid } = req.params;
     if (!mongoose.Types.ObjectId.isValid(cid)) {
       return res.status(400).json({ error: "El ID de carrito no es válido" });
@@ -73,7 +74,7 @@ export default function cartsRouter(cartManager, productManager) {
     }
   });
   // PUTS
-  router.put("/:cid", async (req, res) => {
+  router.put("/:cid", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { cid } = req.params;
 
     if (!req.body || !Array.isArray(req.body.products)) {
@@ -100,7 +101,7 @@ export default function cartsRouter(cartManager, productManager) {
     }
   });
 
-  router.put("/:cid/product/:pid", async (req, res) => {
+  router.put("/:cid/product/:pid", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { cid, pid } = req.params;
     if (!req.body) {
       return res.status(400).json({ error: "Se requiere un campo 'qty' con un número mayor a 0" });
@@ -119,7 +120,7 @@ export default function cartsRouter(cartManager, productManager) {
     }
   });
 
-  router.put("/:cid/estado", async (req, res) => {
+  router.put("/:cid/estado", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { cid } = req.params;
     if (!req.body) {
       return res.status(400).json({ error: "Se requiere un campo 'estado'" });

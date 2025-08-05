@@ -60,3 +60,35 @@ Mariano Pisano
 
 - hay muchas cosas que quisiera hacer mejor. El trabajo cumple con lo pedido pero se que hay mucho que quiza no es profesional. Por ejemplo tenes todo el JS junto en vez de separarlo por paginas de Index y de Carrito.
 - Tener todo el script dentro del eventlistener DOMContentLoaded. Pero sin usar un framework no encontre manera de que todo se recargue solo
+
+
+
+Se ha implementado una estrategia "current"
+que valida al usuario logueado y extrae sus
+datos mediante el endpoint
+/api/sessions/current.
+La estrategia "current" permite extraer el
+usuario asociado al token JWT de manera
+efectiva.
+En caso de token inválido o inexistente, se
+devuelve un error apropiado de Passport.
+El endpoint /api/sessions/current funciona
+correctamente y devuelve los datos del usuario
+asociado al token JWT.
+La validación del usuario en el endpoint es
+precisa y segura.
+
+Realizado
+
+Alcance por aspecto
+
+Puntaje asignado por
+alcance
+
+Realizado 25
+Incompleto 15
+No realizado 0
+Puntaje total Nivel obtenido
+80-100 Óptimo ¿Cómo uso los comentarios?
+51-79 Correcto
+0-50 Bajo

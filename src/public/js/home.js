@@ -1,3 +1,5 @@
+let cartId = null;
+let user = null;
 function configurarCategorias() {
   const linksCategorias = document.querySelectorAll(".boton-categoria");
   const linkVolver = document.querySelector(".boton-volver");
@@ -6,7 +8,7 @@ function configurarCategorias() {
   if (linkVolver) linkVolver.classList.add("disable");
 }
 
-async function actualizarTotales(cartId) {
+async function actualizarTotales() {
   const carritoContenedor = document.getElementById("carrito-contenido");
   const numeritoCarrito = document.getElementById("numerito");
   const carritoCantidad = document.getElementById("carrito-contenido-cantidad");
@@ -37,7 +39,6 @@ async function actualizarTotales(cartId) {
 
 async function configBotonAgregar(event) {
   const productId = event.currentTarget.dataset.id;
-  let cartId = localStorage.getItem("cartId");
 
   if (!cartId) {
     try {
@@ -172,7 +173,6 @@ function interceptarClickCarrito() {
   botonCarrito.addEventListener("click", async (e) => {
     e.preventDefault();
 
-    const cartId = localStorage.getItem("cartId");
     if (!cartId) {
       return;
     }
@@ -203,8 +203,9 @@ function interceptarClickCarrito() {
 }
 async function main() {
   configurarCategorias();
-  const cartId = localStorage.getItem("cartId");
-  await actualizarTotales(cartId);
+  cartId = window.user.cart;
+  user = window.user;
+  await actualizarTotales();
   conectarBotonesAgregar();
   interceptarNavegacion();
   interceptarCategorias();

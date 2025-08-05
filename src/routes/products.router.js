@@ -1,10 +1,10 @@
 // src/routes/products.router.js
 import { Router } from "express";
-
+import passport from "passport";
 export default function productsRouter(productManager) {
   const router = Router();
 
-  router.get("/", async (req, res) => {
+  router.get("/", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     try {
       const { limit = 10, page = 1, sort, query } = req.query;
       // Armo el filtro
@@ -43,7 +43,7 @@ export default function productsRouter(productManager) {
     }
   });
 
-  router.get("/:id", async (req, res) => {
+  router.get("/:id", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { id } = req.params;
     try {
       const product = await productManager.getProductById(id);
@@ -53,7 +53,7 @@ export default function productsRouter(productManager) {
     }
   });
 
-  router.post("/", async (req, res) => {
+  router.post("/", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { description, price, thumbnail, title, code, stock } = req.body;
     if (!title || !description || !price || !code || !stock) {
       return res.status(400).json({ error: "Los campos Title, Description, Price, Code y Stock son obligatorios" });
@@ -66,7 +66,7 @@ export default function productsRouter(productManager) {
     }
   });
 
-  router.put("/:id", async (req, res) => {
+  router.put("/:id", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { id } = req.params;
     const updatedFields = req.body;
     try {
@@ -77,7 +77,7 @@ export default function productsRouter(productManager) {
     }
   });
 
-  router.delete("/:id", async (req, res) => {
+  router.delete("/:id", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
     const { id } = req.params;
     try {
       await productManager.deleteProduct(id);

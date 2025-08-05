@@ -1,5 +1,6 @@
+let cartId = null;
+let user = null;
 async function estadoInicial() {
-  const cartId = localStorage.getItem("cartId");
   if (cartId) await actualizarTotales(cartId);
   const linksCategorias = document.querySelectorAll(".boton-categoria");
   const linkVolver = document.querySelector(".boton-volver");
@@ -14,7 +15,7 @@ async function estadoInicial() {
 
   // si no hay carrito oculto el contenedor del carrito
 }
-async function actualizarTotales(cartId) {
+async function actualizarTotales() {
   const carritoContenedor = document.getElementById("carrito-contenido");
   const numeritoCarrito = document.getElementById("numerito");
   const carritoCantidad = document.getElementById("carrito-contenido-cantidad");
@@ -44,7 +45,6 @@ async function actualizarTotales(cartId) {
 
 async function eliminarProducto(boton) {
   const id = boton.dataset.id;
-  const cartId = localStorage.getItem("cartId");
   if (!cartId) {
     alert("No hay carrito para eliminar productos");
     return;
@@ -102,7 +102,6 @@ function configBotonesEliminar() {
 }
 
 async function vaciarCarrito() {
-  const cartId = localStorage.getItem("cartId");
   if (!cartId) {
     alert("No hay carrito para eliminar productos");
     return;
@@ -133,7 +132,6 @@ async function vaciarCarrito() {
       } catch (error) {
         console.error("Error al actualizar el estado del carrito:", error);
       }
-      localStorage.removeItem("cartId");
     } else {
       const data = await res.json();
       alert(data.error || "Error al vaciar el carrito");
@@ -183,7 +181,6 @@ function interceptarVolverAProductos() {
 }
 async function comprarCarrito() {
   const total = document.getElementById("carrito-total");
-  const cartId = localStorage.getItem("cartId");
 
   if (!cartId) {
     alert("No hay carrito activo");
@@ -206,9 +203,27 @@ async function comprarCarrito() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ estado: "comprado" }),
         });
+        // Creo un nuevo carrito
+        const nuevoCartRes = await fetch("/api/carts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (nuevoCartRes.ok) {
+          const nuevoCart = await nuevoCartRes.json();
+          cartId = nuevoCart._id;
 
-        localStorage.removeItem("cartId");
+          // Actualizar el carrito en el backend
+          await fetch("/api/users/cart", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ newCartId: cartId }),
+          });
 
+          // Actualizar el carrito en el frontend
+          if (window.user) {
+            window.user.cart = cartId;
+          }
+        }
         // Cargar la vista de productos dinámicamente
         const html = await fetch("/").then((res) => res.text());
         const parser = new DOMParser();
@@ -242,9 +257,10 @@ async function comprarCarrito() {
 }
 
 async function main() {
-  const cartId = localStorage.getItem("cartId");
-  estadoInicial(cartId);
-  if (cartId) actualizarTotales(cartId);
+  cartId = window.user.cart;
+  user = window.user;
+  estadoInicial();
+  if (cartId) actualizarTotales();
   configBotonesEliminar();
   interceptarVolverAProductos();
   const botonVaciar = document.getElementById("carrito-acciones-vaciar");
