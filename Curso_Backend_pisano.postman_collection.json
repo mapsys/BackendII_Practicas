@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "e7410ab9-079a-4d9b-9753-16326ca38b58",
 		"name": "Curso_Backend_pisano",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
 		"_exporter_id": "45443090",
 		"_collection_link": "https://mariano-8483223.postman.co/workspace/Mariano's-Workspace~b8c61fac-43c6-47c3-8e83-48e69bb75021/collection/45443090-e7410ab9-079a-4d9b-9753-16326ca38b58?action=share&source=collection_link&creator=45443090"
 	},
@@ -18,18 +18,7 @@
 						},
 						"method": "GET",
 						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/products",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products"
-							]
-						}
+						"url": "http://localhost:8080/api/products"
 					},
 					"response": []
 				},
@@ -41,19 +30,7 @@
 						},
 						"method": "GET",
 						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/products/2",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products",
-								"2"
-							]
-						}
+						"url": "http://localhost:8080/api/products/2"
 					},
 					"response": []
 				},
@@ -74,18 +51,7 @@
 								}
 							}
 						},
-						"url": {
-							"raw": "http://localhost:8080/api/products",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products"
-							]
-						}
+						"url": "http://localhost:8080/api/products"
 					},
 					"response": []
 				},
@@ -106,19 +72,7 @@
 								}
 							}
 						},
-						"url": {
-							"raw": "http://localhost:8080/api/products/16",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products",
-								"16"
-							]
-						}
+						"url": "http://localhost:8080/api/products/16"
 					},
 					"response": []
 				},
@@ -139,19 +93,7 @@
 								}
 							}
 						},
-						"url": {
-							"raw": "http://localhost:8080/api/products/16",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"products",
-								"16"
-							]
-						}
+						"url": "http://localhost:8080/api/products/16"
 					},
 					"response": []
 				}
@@ -177,21 +119,7 @@
 								}
 							}
 						},
-						"url": {
-							"raw": "http://localhost:8080/api/carts/20/products/24",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"carts",
-								"20",
-								"products",
-								"24"
-							]
-						}
+						"url": "http://localhost:8080/api/carts/20/products/24"
 					},
 					"response": []
 				},
@@ -203,19 +131,7 @@
 						},
 						"method": "GET",
 						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/carts/10",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"carts",
-								"10"
-							]
-						}
+						"url": "http://localhost:8080/api/carts/10"
 					},
 					"response": []
 				},
@@ -227,18 +143,7 @@
 						},
 						"method": "POST",
 						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/carts",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"carts"
-							]
-						}
+						"url": "http://localhost:8080/api/carts"
 					},
 					"response": []
 				},
@@ -247,21 +152,7 @@
 					"request": {
 						"method": "DELETE",
 						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/carts/6875188d0e737259e872774b/products/68702f40651d8d75378a7837",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"carts",
-								"6875188d0e737259e872774b",
-								"products",
-								"68702f40651d8d75378a7837"
-							]
-						}
+						"url": "http://localhost:8080/api/carts/6875188d0e737259e872774b/products/68702f40651d8d75378a7837"
 					},
 					"response": []
 				},
@@ -279,19 +170,7 @@
 								}
 							}
 						},
-						"url": {
-							"raw": "http://localhost:8080/api/carts/6875188d0e737259e872774b",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"carts",
-								"6875188d0e737259e872774b"
-							]
-						}
+						"url": "http://localhost:8080/api/carts/6875188d0e737259e872774b"
 					},
 					"response": []
 				},
@@ -309,21 +188,7 @@
 								}
 							}
 						},
-						"url": {
-							"raw": "http://localhost:8080/api/carts/68752773230a72843a7b8969/products/68702f40651d8d75378a7837",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"carts",
-								"68752773230a72843a7b8969",
-								"products",
-								"68702f40651d8d75378a7837"
-							]
-						}
+						"url": "http://localhost:8080/api/carts/68752773230a72843a7b8969/products/68702f40651d8d75378a7837"
 					},
 					"response": []
 				},
@@ -335,20 +200,7 @@
 						},
 						"method": "GET",
 						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/carts/6872ef12b4aecb341b631c6c/totales",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"carts",
-								"6872ef12b4aecb341b631c6c",
-								"totales"
-							]
-						}
+						"url": "http://localhost:8080/api/carts/6872ef12b4aecb341b631c6c/totales"
 					},
 					"response": []
 				},
@@ -360,19 +212,78 @@
 						},
 						"method": "DELETE",
 						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/api/carts/68752773230a72843a7b8969",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"carts",
-								"68752773230a72843a7b8969"
-							]
-						}
+						"url": "http://localhost:8080/api/carts/68752773230a72843a7b8969"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"Mariano\", \n    \"last_name\": \"Pisano\", \n    \"email\": \"mariano2@coder.com\",\n    \"password\": \"12345\",\n    \"age\":50\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/api/sessions/register"
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"mariano@coder.com\",\n    \"password\":\"12345\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/api/sessions/login"
+					},
+					"response": []
+				},
+				{
+					"name": "current",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/api/sessions/current"
+					},
+					"response": []
+				},
+				{
+					"name": "logout",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/api/sessions/logout"
 					},
 					"response": []
 				}

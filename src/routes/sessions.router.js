@@ -3,36 +3,23 @@ import UserManager from "../managers/userManagerMongo.js";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import passport from "passport";
+import { passportCall } from "../config/utils.js";
 const JWT_SECRET = process.env.JWT_SECRET || "coderSecret";
 
 export default function usersRouter() {
   const router = Router();
   const userManager = new UserManager();
 
-  router.post("/register", async (req, res) => {
-    const { first_name, last_name, email, password, age } = req.body;
-    if (!first_name || !last_name || !email || !password || !age) {
-      return res.status(400).json({ error: "Todos los campos son obligatorios" });
-    }
-    try {
-      console.log("registro user", first_name, last_name, email, password, age);
-      const newUser = await userManager.createUser({ first_name, last_name, email, password, age });
-      const userName = `${newUser.first_name} ${newUser.last_name}`;
-      res.status(200).json({ mensaje: "Usuario registrado con exito" });
-    } catch (err) {
-      if (err instanceof mongoose.Error.ValidationError) {
-        return res.status(422).json({ error: err.message });
-      }
-      return res.status(400).json({ error: err.message || "Error interno del servidor" });
-    }
+  router.post("/register", passportCall("registro"), async (req, res) => {
+    res.json({
+      message: `Registro existoso para ${req.user.nombre}`,
+      usuarioCreado: req.user,
+    });
   });
-  router.post("/login", passport.authenticate("login", { session: false }), async (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ error: "Usuario o contraseña incorrectos" });
-    }
-    let usuario = req.user;
-    delete usuario.password; // borrar datos sensibles antes de generar token
-    let token = jwt.sign(usuario, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+  router.post("/login", passportCall("login"), async (req, res) => {
+    const usuario = req.user;
+    const token = jwt.sign(usuario, process.env.JWT_SECRET, { expiresIn: "1h" });
     res.cookie("cookieToken", token, { httpOnly: true });
     return res.status(200).json({
       usuarioLogueado: usuario,

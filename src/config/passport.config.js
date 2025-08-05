@@ -3,6 +3,8 @@ import passportJWT from "passport-jwt";
 import local from "passport-local";
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
+import UserManager from "../managers/userManagerMongo.js";
+const userManager = new UserManager();
 const buscarToken = (req) => {
   let token = null;
 
@@ -12,6 +14,40 @@ const buscarToken = (req) => {
 };
 
 export const iniciarPassport = () => {
+  passport.use(
+    "registro",
+    new local.Strategy(
+      {
+        usernameField: "email",
+        passReqToCallback: true,
+      },
+      async function (req, username, password, done) {
+        try {
+          const { first_name, last_name, age } = req.body;
+          if (!first_name || !last_name || !username || !password || !age) {
+            return done(null, false, { message: "Todos los campos son obligatorios" });
+          }
+
+          const exists = await userManager.findByEmail(username);
+          if (exists) {
+            return done(null, false, { message: `El usuario con email ${username} ya existe` });
+          }
+          const nuevoUsuario = await userManager.createUser({
+            first_name,
+            last_name,
+            email: username,
+            password,
+            age,
+          });
+
+          return done(null, nuevoUsuario);
+        } catch (error) {
+          return done(error);
+        }
+      }
+    )
+  );
+
   passport.use(
     "current",
     new passportJWT.Strategy(
@@ -34,10 +70,13 @@ export const iniciarPassport = () => {
     new local.Strategy(
       {
         usernameField: "email",
+        passReqToCallback: true,
       },
-      async (username, password, done) => {
+      async (req, username, password, done) => {
         try {
-          const user = await User.findOne({ email: username }).lean();
+          const { email, password } = req.body;
+
+          const user = await User.findOne({ email }).lean();
           if (!user) {
             // Usuario no encontrado
             return done(null, false, { message: "Usuario/Contraseña incorrectos" });
@@ -45,7 +84,6 @@ export const iniciarPassport = () => {
 
           const isValid = await bcrypt.compare(password, user.password);
           if (!isValid) {
-            // Contraseña incorrecta
             return done(null, false, { message: "Usuario/Contraseña incorrectos" });
           }
 
