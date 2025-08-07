@@ -1,94 +1,83 @@
-# 🛒 Entrega 2 - Curso Backend
+# 🛍️ eCommerce Backend con Autenticación y Autorización (JWT + Passport)
 
-Proyecto de backend con Express y Handlebars que implementa:
+Este proyecto corresponde a la **Entrega N°1 del curso Backend II**, donde se implementa un sistema completo de gestión de usuarios con autenticación basada en JSON Web Tokens (JWT) y autorización mediante estrategias de Passport.js.
 
-- Sistema de productos con CRUD
-- Carrito de compras con persistencia en MongoDB
-- Paginación, filtros y ordenamiento
-- Vistas con Handlebars
-- Actualización dinámica con JavaScript y Toastify
-- Socket.io para productos en tiempo real
+## 🔧 Tecnologías utilizadas
 
-## 📂 Estructura
+- Node.js
+- Express
+- MongoDB + Mongoose
+- Passport.js
+- bcryptjs
+- JWT (jsonwebtoken)
+- Express Handlebars
+- WebSockets (Socket.io)
+
+## 📁 Estructura del proyecto
 
 ```
-/src
-  /routes        ← Rutas API y vistas
-  /views         ← Plantillas Handlebars
-  /managers      ← Lógica de productos y carritos
-  /models        ← Esquemas de Mongoose
-  /public        ← JS y CSS frontend
+src/
+├── config/              # Configuración de Passport, MongoDB y utilidades
+├── managers/            # Lógica de negocio para usuarios, productos y carritos
+├── middlewares/         # Middlewares personalizados
+├── models/              # Esquemas de Mongoose
+├── public/              # Archivos estáticos (JS, CSS, imágenes)
+├── routes/              # Rutas de la API y vistas
+├── sockets/             # Websockets para actualizaciones en tiempo real
+├── views/               # Vistas Handlebars
+└── server.js            # Punto de entrada principal
 ```
 
-## 🔌 Endpoints principales
+## 👤 Modelo de Usuario
 
-### Productos
+El modelo de usuario (`user.model.js`) incluye:
 
-- `GET /api/products` con paginación, filtros y orden
-- `GET /api/products/:code`
-- `POST /api/products` → crear
-- `PUT /api/products/:code` → actualizar
-- `DELETE /api/products/:id` → eliminar
+- `first_name`, `last_name`, `email`, `age`, `password` (hasheada)
+- `cart`: referencia a `Cart`
+- `role`: `"user"` o `"admin"` dependiendo del email (`@coder.com`)
 
-### Carritos
+La contraseña se encripta automáticamente antes de guardar con `bcryptjs`.
 
-- `POST /api/carts` → crea un carrito
-- `POST /api/carts/:cid/products/:pid` → agrega producto
-- `DELETE /api/carts/:cid/products/:pid` → elimina producto
-- `DELETE /api/carts/:cid` → vacía carrito
-- `GET /api/carts/:cid/totales` → totales actualizados
+## 🔐 Autenticación y Autorización
 
-### Vistas
+Se utilizan estrategias Passport:
 
-- `/` → home
-- `/realtimeproducts` → productos en tiempo real
-- `/carts/:cid` → vista de carrito
+- `login`: Verifica email/contraseña y genera un JWT
+- `current`: Extrae el usuario desde el JWT almacenado en la cookie `cookieToken`
 
-## 📦 Dependencias
+El token JWT se guarda en una cookie HTTP Only segura.
 
-- express
-- express-handlebars
-- mongoose
-- socket.io
-- nodemon (dev)
+## 📌 Rutas principales
 
-## ✍️ Autor
+- `POST /api/users/register` → Registro de usuarios
+- `POST /api/users/login` → Login de usuario (genera JWT)
+- `GET /api/sessions/current` → Devuelve datos del usuario autenticado
+- `GET /api/users/logout` → Borra la cookie y desloguea al usuario
 
-Mariano Pisano
+## 🧪 Scripts
 
-## NOTAS
+```bash
+npm install     # Instala dependencias
+npm run dev     # Ejecuta el servidor con nodemon
+```
 
-- hay muchas cosas que quisiera hacer mejor. El trabajo cumple con lo pedido pero se que hay mucho que quiza no es profesional. Por ejemplo tenes todo el JS junto en vez de separarlo por paginas de Index y de Carrito.
-- Tener todo el script dentro del eventlistener DOMContentLoaded. Pero sin usar un framework no encontre manera de que todo se recargue solo
+## 📬 Postman
 
+Se incluye la colección Postman para testear las rutas en:  
+`Curso_Backend_pisano.postman_collection.json`
 
+## ✅ Estado del proyecto
 
-Se ha implementado una estrategia "current"
-que valida al usuario logueado y extrae sus
-datos mediante el endpoint
-/api/sessions/current.
-La estrategia "current" permite extraer el
-usuario asociado al token JWT de manera
-efectiva.
-En caso de token inválido o inexistente, se
-devuelve un error apropiado de Passport.
-El endpoint /api/sessions/current funciona
-correctamente y devuelve los datos del usuario
-asociado al token JWT.
-La validación del usuario en el endpoint es
-precisa y segura.
+- [x] Modelo de usuario implementado con todos los campos requeridos
+- [x] Contraseña encriptada correctamente
+- [x] Estrategias Passport funcionando (login y current)
+- [x] Token JWT emitido y almacenado en cookie
+- [x] Ruta `/api/sessions/current` funcionando
+- [x] Uso correcto de middlewares para proteger rutas privadas
 
-Realizado
+---
 
-Alcance por aspecto
+## 📎 Autor
 
-Puntaje asignado por
-alcance
-
-Realizado 25
-Incompleto 15
-No realizado 0
-Puntaje total Nivel obtenido
-80-100 Óptimo ¿Cómo uso los comentarios?
-51-79 Correcto
-0-50 Bajo
+Mariano Pisano  
+Entrega correspondiente al curso Backend II
