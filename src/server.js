@@ -17,6 +17,7 @@ import dotenv from "dotenv";
 import passport from 'passport';
 import { iniciarPassport } from './config/passport.config.js';
 import cookieParser from "cookie-parser";
+import { errorHandler } from "./middlewares/errorHandler.js";
 // Uso de Env para la conexion
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -68,11 +69,11 @@ app.use(express.urlencoded({ extended: true }));
 connectDB();
 
 // Rutas
-app.use("/api/products", productsRouter(productManager));
+app.use("/api/products", productsRouter());
 app.use("/api/carts", cartsRouter(cartManager, productManager));
 app.use("/", viewsRouter(productManager, cartManager));
 app.use("/api/sessions", sessionsRouter());
-
+app.use(errorHandler);
 // WebSocket connection
 configureSockets(io, productManager);
 

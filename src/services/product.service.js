@@ -1,0 +1,83 @@
+// src/services/product.service.js
+import ProductDAO from "../dao/product.dao.js";
+
+export default class ProductService {
+  constructor(dao = new ProductDAO()) {
+    this.dao = dao;
+  }
+
+  _validateCreate(data) {
+    const required = ["title", "description", "price", "code", "stock"];
+    const missing = required.filter((k) => data[k] === undefined || data[k] === null || data[k] === "");
+    if (missing.length) {
+      const err = new Error(`Los campos ${missing.join(", ")} son obligatorios`);
+      err.status = 400;
+      throw err;
+    }
+    if (typeof data.price !== "number" || data.price <= 0) {
+      const err = new Error("El precio debe ser un número positivo");
+      err.status = 400;
+      throw err;
+    }
+    if (typeof data.stock !== "number" || data.stock < 0) {
+      const err = new Error("El stock debe ser un número no negativo");
+      err.status = 400;
+      throw err;
+    }
+  }
+
+  async paginate({ limit = 10, page = 1, sort, query }) {
+    // Filtro
+    const filtro = {};
+    if (query) {
+      if (query === "disponibles") filtro.stock = { $gt: 0 };
+      else filtro.category = query;
+    }
+
+    // Opciones de paginate
+    const options = {
+      limit: parseInt(limit),
+      page: parseInt(page),
+      sort: sort === "asc" ? { price: 1 } : sort === "desc" ? { price: -1 } : undefined,
+      lean: true,
+    };
+
+    return await this.dao.paginate(filtro, options);
+  }
+
+  async getById(id) {
+    const prod = await this.dao.getProductById(id);
+    if (!prod) {
+      const err = new Error("Producto no encontrado");
+      err.status = 404;
+      throw err;
+    }
+    return prod;
+  }
+
+  async create({ description, price, thumbnail, title, code, stock, category }) {
+    const data = { description, price, thumbnail, title, code, stock, categoria: category };
+    this._validateCreate(data);
+    return await this.dao.addProduct(description, price, thumbnail, title, code, stock, category);
+  }
+
+  async update(id, updatedFields) {
+    const prod = await this.dao.updateProduct(id, updatedFields);
+    if (!prod) {
+      const err = new Error("Producto no encontrado");
+      err.status = 404;
+      throw err;
+    }
+    return prod;
+  }
+
+  async remove(id) {
+    const prod = await this.dao.deleteProduct(id);
+    if (!prod) {
+      const err = new Error("Producto no encontrado");
+      err.status = 404;
+      throw err;
+    }
+    return prod;
+  }
+}
