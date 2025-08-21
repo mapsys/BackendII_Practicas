@@ -18,6 +18,8 @@ import passport from 'passport';
 import { iniciarPassport } from './config/passport.config.js';
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler.js";
+
+
 // Uso de Env para la conexion
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -70,7 +72,7 @@ connectDB();
 
 // Rutas
 app.use("/api/products", productsRouter());
-app.use("/api/carts", cartsRouter(cartManager, productManager));
+app.use("/api/carts", cartsRouter());
 app.use("/", viewsRouter(productManager, cartManager));
 app.use("/api/sessions", sessionsRouter());
 app.use(errorHandler);

@@ -1,50 +1,32 @@
+// src/routes/sessions.router.js
 import { Router } from "express";
-import UserManager from "../managers/userManagerMongo.js";
-import mongoose from "mongoose";
-import jwt from "jsonwebtoken";
-import passport from "passport";
 import { passportCall } from "../middlewares/passportCall.js";
-const JWT_SECRET = process.env.JWT_SECRET || "coderSecret";
+import SessionsController from "../controllers/sessions.controller.js";
 
-export default function usersRouter() {
+export default function sessionsRouter() {
   const router = Router();
-  const userManager = new UserManager();
+  const controller = new SessionsController();
 
-  router.post("/register", passportCall("registro"), async (req, res) => {
-    res.json({
-      message: `Registro existoso para ${req.user.nombre}`,
-      usuarioCreado: req.user,
-    });
-  });
+  // Registro
+  router.post("/register", passportCall("registro"), controller.registerFromPassport);
+  // o sin passport:
+  // router.post("/register", controller.registerDirect);
 
-  router.post("/login", passportCall("login"), async (req, res) => {
-    const usuario = req.user;
-    const token = jwt.sign(usuario, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.cookie("cookieToken", token, { httpOnly: true });
-    return res.status(200).json({
-      usuarioLogueado: usuario,
-    });
-  });
+  // Login
+  router.post("/login", passportCall("login"), controller.loginFromPassport);
+  // o sin passport:
+  // router.post("/login", controller.loginDirect);
 
-  router.get("/logout", (req, res) => {
-    console.log("logout");
-    res.clearCookie("cookieToken");
-    res.status(200).json({ message: "Sesión cerrada correctamente" });
-  });
+  // Logout
+  router.get("/logout", controller.logout);
 
-  router.put("/cart", passport.authenticate("login", { session: false, failureRedirect: "/error" }), async (req, res) => {
-    const userId = req.user._id;
-    const { newCartId } = req.body;
+  // Actualizar cart del usuario (protegido por JWT "current")
+  router.put("/cart", passportCall("current"), controller.setCart);
 
-    try {
-      await User.findByIdAndUpdate(userId, { cart: newCartId });
-      res.json({ mensaje: "Carrito del usuario actualizado" });
-    } catch (err) {
-      res.status(500).json({ error: "No se pudo actualizar el carrito del usuario" });
-    }
-  });
-  router.get("/current", passport.authenticate("current", { session: false }), (req, res) => {
-    res.status(200).json({ user: req.user });
-  });
+  // Current desde token (sin ir a DB)
+  router.get("/current", passportCall("current"), controller.currentFromToken);
+  // o si querés leer de DB:
+  // router.get("/current", passportCall("current"), controller.current);
+
   return router;
 }

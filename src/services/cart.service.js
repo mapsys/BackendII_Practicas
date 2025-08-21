@@ -83,6 +83,18 @@ export default class CartService {
     return res;
   }
 
+  async clear(cartId) {
+    console.log("limpiare cart ", cartId);
+    const updated = await this.dao.clearProducts(cartId);
+    console.log("Limpie cart ", cartId);
+    if (!updated) {
+      const e = new Error("Carrito no encontrado");
+      e.status = 404;
+      throw e;
+    }
+    return updated;
+  }
+
   async replaceProducts(cartId, products) {
     if (!Array.isArray(products) || products.length === 0) {
       const e = new Error("Debe enviar una lista de productos");

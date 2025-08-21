@@ -84,7 +84,14 @@ export default class CartDAO {
     );
     return cart; // null si no existe
   }
-
+  async clearProducts(cartId) {
+    const updated = await Cart.findByIdAndUpdate(
+      cartId,
+      { $set: { products: [] } },
+      { new: true, lean: true } // runValidators/strict no hacen falta acá
+    );
+    return updated; // null si no existe
+  }
   async calculateTotals(cartId) {
     const result = await Cart.aggregate([
       { $match: { _id: new mongoose.Types.ObjectId(cartId) } },

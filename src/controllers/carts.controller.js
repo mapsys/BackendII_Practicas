@@ -14,6 +14,7 @@ export default class CartsController {
     this.removeProduct = this.removeProduct.bind(this);
     this.updateStatus = this.updateStatus.bind(this);
     this.totals = this.totals.bind(this);
+    this.clear = this.clear.bind(this);
   }
 
   async list(req, res, next) {
@@ -80,6 +81,15 @@ export default class CartsController {
     try {
       const totals = await this.service.totals(req.params.cid);
       res.status(200).json(totals);
+    } catch (e) { next(e); }
+  }
+
+    async clear(req, res, next) {
+    try {
+      console.log('Vaciare cart ', req.params.cid);
+      const cart = await this.service.clear(req.params.cid);
+      console.log('vacie el carrito)', cart);
+      res.status(200).json(cart);
     } catch (e) { next(e); }
   }
 }
