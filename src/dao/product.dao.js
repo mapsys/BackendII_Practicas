@@ -29,12 +29,6 @@ export default class ProductDAO {
       throw new Error("El stock debe ser un número no negativo");
     }
 
-    // Unicidad por code
-    const exists = await Producto.findOne({ code });
-    if (exists) {
-      throw new Error("El código del producto debe ser único");
-    }
-
     const newProduct = new Producto({
       description,
       price,
@@ -50,11 +44,7 @@ export default class ProductDAO {
       await newProduct.save();
       return newProduct.toObject();
     } catch (error) {
-      // Captura de E11000 por índice único
-      if (error?.code === 11000) {
-        throw new Error("El código del producto debe ser único");
-      }
-      throw new Error(`Error al crear producto: ${error.message}`);
+      throw error;
     }
   }
 
@@ -71,11 +61,7 @@ export default class ProductDAO {
   }
 
   async updateProduct(id, updatedFields) {
-    const product = await Producto.findByIdAndUpdate(
-      id,
-      updatedFields,
-      { new: true, lean: true }
-    );
+    const product = await Producto.findByIdAndUpdate(id, updatedFields, { new: true, lean: true });
     if (!product) throw new Error("Producto no encontrado");
     return product;
   }

@@ -1,16 +1,20 @@
 // src/services/product.service.js
 import ProductDAO from "../dao/product.dao.js";
-
+const ALLOWED_FIELDS = ["description", "price", "category", "thumbnails", "title", "code", "stock", "status"];
 export default class ProductService {
   constructor(dao = new ProductDAO()) {
     this.dao = dao;
   }
 
   _validateCreate(data) {
-    const required = ["title", "description", "price", "code", "stock"];
+    const required = ["title", "description", "price", "code", "stock", "category"];
     const missing = required.filter((k) => data[k] === undefined || data[k] === null || data[k] === "");
     if (missing.length) {
-      const err = new Error(`Los campos ${missing.join(", ")} son obligatorios`);
+      const err = new Error(
+        `${missing.length > 1 ? "Los" : "El"} campo${missing.length > 1 ? "s" : ""} ${missing.join(", ")} ${missing.length > 1 ? "son" : "es"} obligatorio${
+          missing.length > 1 ? "s" : ""
+        }`
+      );
       err.status = 400;
       throw err;
     }
@@ -56,12 +60,42 @@ export default class ProductService {
   }
 
   async create({ description, price, thumbnail, title, code, stock, category }) {
-    const data = { description, price, thumbnail, title, code, stock, categoria: category };
+    const data = { description, price, thumbnail, title, code, stock, category };
     this._validateCreate(data);
     return await this.dao.addProduct(description, price, thumbnail, title, code, stock, category);
   }
 
-  async update(id, updatedFields) {
+  async update(id, updatedFields = {}) {
+    if (Object.keys(updatedFields).length === 0) {
+      const e = new Error("No hay campos para actualizar");
+      e.status = 400;
+      throw e;
+    }
+    const invalid = Object.keys(updatedFields).filter((k) => !ALLOWED_FIELDS.includes(k));
+    if (invalid.length) {
+      const e = new Error(`Campos no válidos: ${invalid.join(", ")}`);
+      e.status = 400;
+      throw e;
+    }
+    if ("price" in updatedFields) {
+      if (typeof updatedFields.price !== "number" || updatedFields.price <= 0) {
+        const e = new Error("El precio debe ser un número positivo");
+        e.status = 400;
+        throw e;
+      }
+    }
+    if ("stock" in updatedFields) {
+      if (typeof updatedFields.stock !== "number" || updatedFields.stock < 0) {
+        const e = new Error("El stock debe ser un número no negativo");
+        e.status = 400;
+        throw e;
+      }
+    }
+    if ("thumbnails" in updatedFields && !Array.isArray(updatedFields.thumbnails)) {
+      // normalizo: acepto string y lo convierto a array
+      updatedFields.thumbnails = [updatedFields.thumbnails];
+    }
+
     const prod = await this.dao.updateProduct(id, updatedFields);
     if (!prod) {
       const err = new Error("Producto no encontrado");

@@ -3,7 +3,7 @@ import UserManager from "../managers/userManagerMongo.js";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import passport from "passport";
-import { passportCall } from "../config/utils.js";
+import { passportCall } from "../middlewares/passportCall.js";
 const JWT_SECRET = process.env.JWT_SECRET || "coderSecret";
 
 export default function usersRouter() {
