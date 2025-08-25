@@ -9,7 +9,7 @@ export default class CartDAO {
 
   async findById(id, { populate = false } = {}) {
     const q = Cart.findById(id);
-    if (populate) q.populate("products.product", "title price category code status");
+    if (populate) q.populate("products.product");
     const cart = await q.lean();
     return cart; // puede ser null
   }
@@ -23,7 +23,7 @@ export default class CartDAO {
     const cart = await Cart.findById(cartId);
     if (!cart) return null;
 
-    const idx = cart.products.findIndex(p => p.product.toString() === productId);
+    const idx = cart.products.findIndex((p) => p.product.toString() === productId);
     if (idx !== -1) {
       cart.products[idx].quantity += qty;
     } else {
@@ -40,7 +40,7 @@ export default class CartDAO {
     const cart = await Cart.findById(cartId);
     if (!cart) return null;
 
-    const idx = cart.products.findIndex(p => p.product.toString() === productId);
+    const idx = cart.products.findIndex((p) => p.product.toString() === productId);
     if (idx === -1) return undefined; // carrito ok, producto no estaba
     cart.products.splice(idx, 1);
     await cart.save();
@@ -51,7 +51,7 @@ export default class CartDAO {
     const cart = await Cart.findById(cartId);
     if (!cart) return null;
 
-    cart.products = products.map(p => ({
+    cart.products = products.map((p) => ({
       product: new mongoose.Types.ObjectId(p.product),
       quantity: p.quantity,
     }));
@@ -64,7 +64,7 @@ export default class CartDAO {
     const cart = await Cart.findById(cartId);
     if (!cart) return null;
 
-    const idx = cart.products.findIndex(p => p.product.toString() === productId);
+    const idx = cart.products.findIndex((p) => p.product.toString() === productId);
     if (idx === -1) return undefined;
 
     if (quantity <= 0) {
@@ -77,11 +77,7 @@ export default class CartDAO {
   }
 
   async updateStatus(cartId, status) {
-    const cart = await Cart.findByIdAndUpdate(
-      cartId,
-      { $set: { estado: status } },
-      { new: true, lean: true, runValidators: true, strict: "throw" }
-    );
+    const cart = await Cart.findByIdAndUpdate(cartId, { $set: { estado: status } }, { new: true, lean: true, runValidators: true, strict: "throw" });
     return cart; // null si no existe
   }
   async clearProducts(cartId) {
@@ -111,12 +107,8 @@ export default class CartDAO {
           totalCantidad: { $sum: { $ifNull: ["$products.quantity", 0] } },
           totalPrecio: {
             $sum: {
-              $cond: [
-                { $and: [ { $gt: ["$products.quantity", 0] }, { $ifNull: ["$productoInfo.price", false] } ] },
-                { $multiply: ["$products.quantity", "$productoInfo.price"] },
-                0
-              ]
-            }
+              $cond: [{ $and: [{ $gt: ["$products.quantity", 0] }, { $ifNull: ["$productoInfo.price", false] }] }, { $multiply: ["$products.quantity", "$productoInfo.price"] }, 0],
+            },
           },
         },
       },

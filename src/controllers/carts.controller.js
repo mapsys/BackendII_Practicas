@@ -86,9 +86,7 @@ export default class CartsController {
 
     async clear(req, res, next) {
     try {
-      console.log('Vaciare cart ', req.params.cid);
       const cart = await this.service.clear(req.params.cid);
-      console.log('vacie el carrito)', cart);
       res.status(200).json(cart);
     } catch (e) { next(e); }
   }

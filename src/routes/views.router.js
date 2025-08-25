@@ -1,99 +1,32 @@
 // src/routes/views.router.js
 import { Router } from "express";
-import { auth, authAdmin } from "../middlewares/auth.js";
 import passport from "passport";
-export default function viewsRouter(productManager, cartManager) {
+import ViewsController from "../controllers/views.controller.js";
+// Si tenés un authAdmin que revisa req.user.role === 'admin', reusalo:
+import { authAdmin } from "../middlewares/auth.js";
+
+export default function viewsRouter() {
   const router = Router();
+  const controller = new ViewsController();
 
-  router.get("/", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
-    try {
-      const { limit = 10, page = 1, sort, query } = req.query;
+  // Para VISTAS queremos redirigir al login si no hay token:
+  const viewAuth = passport.authenticate("current", { session: false, failureRedirect: "/login" });
 
-      const filtro = {};
-      if (query) {
-        if (query === "disponibles") {
-          filtro.stock = { $gt: 0 };
-        } else {
-          filtro.category = query;
-        }
-      }
+  // Home con paginación (usa ProductService.paginate)
+  router.get("/", viewAuth, controller.home);
 
-      const options = {
-        limit: parseInt(limit),
-        page: parseInt(page),
-        sort: sort === "asc" ? { price: 1 } : sort === "desc" ? { price: -1 } : undefined,
-        lean: true,
-      };
+  // Vista realtime (admin)
+  router.get("/realtimeproducts", viewAuth, authAdmin, controller.realTimeProducts);
 
-      const result = await productManager.paginate(filtro, options);
+  // Detalle de carrito (usa CartService.getById(..., { populate: true }))
+  router.get("/carts/:cid", viewAuth, controller.cartDetail);
 
-      res.render("home", {
-        products: result.docs,
-        totalPages: result.totalPages,
-        page: result.page,
-        hasPrevPage: result.hasPrevPage,
-        hasNextPage: result.hasNextPage,
-        prevPage: result.prevPage,
-        nextPage: result.nextPage,
-        query,
-        sort,
-        limit,
-        title: "My eCommerce",
-        user: req.user,
-      });
-    } catch (error) {
-      res.status(500).send("Error al cargar productos");
-    }
-  });
+  // Vistas públicas
+  router.get("/register", controller.registerView);
+  router.get("/login", controller.loginView);
 
-  router.get("/realtimeproducts", passport.authenticate("current", { session: false, failureRedirect: "/login" }), authAdmin, async (req, res) => {
-    const products = await productManager.getProducts();
-    res.render("realTimeProducts", { products, title: "Productos en tiempo real" });
-  });
+  // Vista logout (si usás sesiones de express para esta vista)
+  router.get("/logout", controller.logoutView);
 
-  router.get("/carts/:cid", passport.authenticate("current", { session: false, failureRedirect: "/login" }), async (req, res) => {
-    const { cid } = req.params;
-    try {
-      const cart = await cartManager.getCartById(cid);
-      await cart.populate("products.product");
-
-      const productosConSubtotal = cart.products.map((item) => ({
-        title: item.product.title,
-        price: item.product.price,
-        quantity: item.quantity,
-        subtotal: item.quantity * item.product.price,
-        thumbnail: item.product.thumbnails[0],
-        id: item.product._id,
-      }));
-
-      const total = productosConSubtotal.reduce((acc, p) => acc + p.subtotal, 0);
-
-      res.render("cartDetail", {
-        title: "Tu Carrito",
-        productos: productosConSubtotal,
-        total,
-        user: req.user,
-      });
-    } catch (error) {
-      res.status(500).send(error.message);
-    }
-  });
-
-  router.get("/register", (req, res) => {
-    res.render("register"); // Handlebars busca register.handlebars
-  });
-
-  router.get("/login", (req, res) => {
-    res.render("login");
-  });
-
-  // router.get("/logout", (req, res) => {
-  //   req.session.destroy((err) => {
-  //     if (err) return res.status(500).send("Error al cerrar sesión");
-
-  //     res.clearCookie("connect.sid"); // borra la cookie en el navegador
-  //     res.render("logout"); // o res.redirect("/login");
-  //   });
-  // });
   return router;
 }

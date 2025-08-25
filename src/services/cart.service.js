@@ -84,9 +84,7 @@ export default class CartService {
   }
 
   async clear(cartId) {
-    console.log("limpiare cart ", cartId);
     const updated = await this.dao.clearProducts(cartId);
-    console.log("Limpie cart ", cartId);
     if (!updated) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
