@@ -97,4 +97,11 @@ export default class UserService {
     }
     return sanitizeUser(user);
   }
+
+  async findByIdSafe(id) {
+    const user = await this.dao.findByIdLean(id);
+    if (!user) return null;
+    const { password, ...safe } = user;
+    return safe;
+  }
 }

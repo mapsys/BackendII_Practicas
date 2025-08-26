@@ -1,10 +1,10 @@
 <main>
   <div class="container">
-        {{#if user}}
-      <div class="bienvenida">
-        Bienvenido {{user.name}} ({{user.role}})
-      </div>
-    {{/if}}
+{{#if user}}
+  <div class="bienvenida">
+    Bienvenido {{user.first_name}} {{user.last_name}} ({{user.role}})
+  </div>
+{{/if}}
   <div class="main-header">
 
     <h2 id="titulo-principal" class="titulo-principal">Todos los productos</h2>

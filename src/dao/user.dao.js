@@ -26,4 +26,7 @@ export default class UserDAO {
   async setCart(userId, newCartId) {
     return await User.findByIdAndUpdate(userId, { $set: { cart: newCartId } }, { new: true, lean: true });
   }
+  async findByIdLean(id) {
+    return User.findById(id).lean();
+  }
 }

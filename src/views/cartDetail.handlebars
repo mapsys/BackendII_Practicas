@@ -4,7 +4,7 @@
     <div id="carrito-productos" class="carrito-productos">
       {{#each productos}}
         <div class="carrito-producto">
-          <img class="carrito-imagen" src="{{this.thumbnail}}" alt="{{this.title}}" />
+          <img class="carrito-imagen" src="{{firstThumbnail this.thumbnails}}" alt="{{this.title}}" />
 
           <div class="carrito-producto-titulo">
             <small>Nombre</small>
