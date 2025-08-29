@@ -37,7 +37,7 @@ export default class ViewsController {
     try {
       // Si querés estrictamente "todos", podés pedir un límite grande:
       const result = await this.products.paginate({ limit: 1000, page: 1 });
-      res.render("realTimeProducts", { products: result.docs, title: "Productos en tiempo real" });
+      res.render("realTimeProducts", { products: result.docs, user: req.user, title: "Productos en tiempo real" });
     } catch (err) {
       next(err);
     }
@@ -88,5 +88,9 @@ export default class ViewsController {
       res.clearCookie("connect.sid");
       res.render("logout");
     });
+  };
+
+  profile = (req, res) => {
+    res.render("perfil", { user: req.user });
   };
 }

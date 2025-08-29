@@ -15,25 +15,39 @@ function showFlashToastIfAny() {
     }).showToast();
   } catch (_) {}
 }
+function setActiveCategoryFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get("query"); // viene capitalizado (p.ej. "Moldes")
+  const id = q ? q.toLowerCase() : "todos"; // tus ids son en minúsculas
+  document.querySelectorAll(".boton-categoria").forEach((btn) => {
+    btn.classList.toggle("active", btn.id === id);
+  });
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   const user = window?.user || null;
   const cartId = user?.cart || null;
-  // Detecto si estoy en la vista de carrito (ej: /carts o /carts/:cid)
-  const isCartView = /^\/carts(\/|$)/.test(window.location.pathname);
 
-  // Toggle de la UI lateral (categorías vs. "Seguir comprando")
+  // ↓ normalizo el path
+  const path = window.location.pathname.toLowerCase();
+  const isCartOrRealtimeView =
+    path === "/carts" ||
+    path.startsWith("/carts/") ||
+    path === "/realtimeproducts" || // admite /realTimeProducts
+    path.startsWith("/realtimeproducts/");
+
   const categorias = document.querySelectorAll(".boton-categoria");
   const linkVolver = document.querySelector(".boton-volver");
 
-  if (isCartView) {
-    // En carrito: oculto categorías, muestro "Seguir comprando"
+  if (isCartOrRealtimeView) {
+    // En carrito o realtime: oculto categorías, muestro "Seguir comprando"
     categorias.forEach((btn) => btn.classList.add("disable"));
     if (linkVolver) linkVolver.classList.remove("disable");
   } else {
-    // En resto (home, login, etc.): muestro categorías, oculto "Seguir comprando"
+    // Otras vistas: muestro categorías, oculto "Seguir comprando"
     categorias.forEach((btn) => btn.classList.remove("disable"));
     if (linkVolver) linkVolver.classList.add("disable");
+    setActiveCategoryFromURL();
   }
 
   // Logout clásico + redirect
@@ -55,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Link del carrito
   const linkCarrito = document.getElementById("boton-carrito");
   if (linkCarrito) {
-    linkCarrito.href = cartId ? `/carts/${cartId}` : "/carts";
+    linkCarrito.href = cartId ? `/carts/${cartId}` : "#";
   }
 
   // Totales en el sidebar del carrito (si hay cart)
@@ -73,7 +87,13 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".boton-categoria").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
-      const id = btn.id;
+
+      // 1) Visual: marcar activa antes de navegar
+      document.querySelectorAll(".boton-categoria").forEach((b) => b.classList.remove("active"));
+      e.currentTarget.classList.add("active");
+
+      // 2) Navegar con los parámetros correctos
+      const id = e.currentTarget.id;
       const params = new URLSearchParams(window.location.search);
       if (id === "todos") params.delete("query");
       else params.set("query", capitalize(id));

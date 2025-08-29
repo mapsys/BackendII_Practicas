@@ -1,37 +1,48 @@
-export const configureSockets = (io, productManager) => {
+// src/sockets/index.js
+export const configureSockets = (io, { productService }) => {
   io.on("connection", async (socket) => {
-    console.log("🟢 Cliente conectado");
+    console.log("🟢 Cliente conectado:", socket.id);
 
-    const products = await productManager.getProducts();
-    socket.emit("products", products);
+    // Lista inicial solo a este cliente
+    try {
+      const products = await productService.listAll(); // ← método del service
+      socket.emit("products", products);
+    } catch (e) {
+      console.error(e);
+      socket.emit("products:error", "No se pudo cargar la lista de productos");
+    }
 
-    socket.on("addProduct", (productData) => {
-      (async () => {
-        try {
-          await productManager.addProduct(
-            productData.description,
-            productData.price,
-            productData.thumbnail,
-            productData.title,
-            productData.code,
-            productData.stock,
-            productData.category
-          );
-          const updatedProducts = await productManager.getProducts();
-          io.emit("products", updatedProducts);
-        } catch (error) {
-          socket.emit("error", error.message);
-        }
-      })();
+    // Agregar producto (y BROADCAST de la lista)
+    socket.on("addProduct", async (prod) => {
+      try {
+        await productService.create({
+          title: prod.title,
+          description: prod.description,
+          price: prod.price,
+          thumbnail: prod.thumbnail, // el DAO lo mete como [thumbnail] si existe
+          code: prod.code,
+          stock: prod.stock,
+          category: prod.category,
+        });
+
+        const updated = await productService.listAll();
+        io.emit("products", updated); // ← broadcast a TODOS
+      } catch (err) {
+        console.error("addProduct error:", err);
+        socket.emit("products:error", err.message || "Error al crear producto");
+      }
     });
 
+    // Eliminar producto (y BROADCAST de la lista)
     socket.on("deleteProduct", async (id) => {
       try {
-        await productManager.deleteProduct(id);
-        const updated = await productManager.getProducts();
-        io.emit("products", updated);
+        await productService.remove(id);
+
+        const updated = await productService.listAll();
+        io.emit("products", updated); // ← broadcast a TODOS
       } catch (err) {
-        socket.emit("error", err.message);
+        console.error("deleteProduct error:", err);
+        socket.emit("products:error", err.message || "Error al eliminar producto");
       }
     });
   });

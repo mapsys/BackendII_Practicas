@@ -14,11 +14,11 @@ import { connectDB } from "./config/mongo.js";
 import { configureSockets } from "./sockets/index.js";
 import cors from "cors";
 import dotenv from "dotenv";
-import passport from 'passport';
-import { iniciarPassport } from './config/passport.config.js';
+import passport from "passport";
+import { iniciarPassport } from "./config/passport.config.js";
 import cookieParser from "cookie-parser";
 import { errorHandler } from "./middlewares/errorHandler.js";
-
+import ProductService from "./services/product.service.js";
 
 // Uso de Env para la conexion
 dotenv.config();
@@ -26,26 +26,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const dataPath = join(__dirname, "src/data");
 
-
-
-
 // Configuro express y Socket.IO
 const app = express();
 app.use(cookieParser());
 const httpServer = createServer(app);
 const io = new Server(httpServer);
+const productService = new ProductService();
 // app.use(
 //   cors({
-//     origin: "http://localhost:5173", 
+//     origin: "http://localhost:5173",
 //   })
 // );
 
 const PORT = process.env.PORT || 8080;
 const productManager = new ProductManager();
 const cartManager = new CartManager();
-// Configuro Passport 
-iniciarPassport()
-app.use(passport.initialize())
+// Configuro Passport
+iniciarPassport();
+app.use(passport.initialize());
 
 // Configuro Handlebars
 const hbs = exphbs.create({
@@ -77,7 +75,7 @@ app.use("/", viewsRouter(productManager, cartManager));
 app.use("/api/sessions", sessionsRouter());
 app.use(errorHandler);
 // WebSocket connection
-configureSockets(io, productManager);
+configureSockets(io, { productService });
 
 httpServer.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

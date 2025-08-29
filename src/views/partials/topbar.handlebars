@@ -1,0 +1,28 @@
+<div class="topbar">
+  <div class="topbar-left">
+    <i class="bi bi-person-circle topbar-icon"></i>
+    {{#if user}}
+      <a href="/profile" class="topbar-name-link">
+        {{user.first_name}}
+        {{user.last_name}}
+      </a>
+      <span class="topbar-role topbar-role-{{user.role}}">{{user.role}}</span>
+    {{else}}
+      <span class="topbar-guest">Debes estar logueado</span>
+    {{/if}}
+  </div>
+
+  <div class="topbar-right">
+    {{#if user}}
+      <a href="#" id="logoutLink" class="topbar-logout">
+        <i class="bi bi-box-arrow-right"></i>
+        Logout
+      </a>
+    {{else}}
+      <a href="/login" class="topbar-login">
+        <i class="bi bi-box-arrow-in-right"></i>
+        Iniciar sesión
+      </a>
+    {{/if}}
+  </div>
+</div>

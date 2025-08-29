@@ -1,4 +1,5 @@
 <section class="realTimeMainSection">
+   {{> topbar user=user}}
   <div class="header realTimeHeader">
     <h1>Productos en tiempo real</h1>
     <a href="/" class="realTimeView">
@@ -60,6 +61,11 @@
 
   </div>
   <footer>© copyright 2024 - Mariano Pisano</footer>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/realtime.js"></script>
+  <script>
+  window.user =
+  {{{json user}}};
+</script>
 </section>

@@ -8,6 +8,8 @@
   --clr-white: #ececec;
   --clr-gray: #e2e2e2;
   --clr-red: #961818;
+  --rt-accent: #ffd166; /* dorado/anaranjado */
+  --rt-accent-ink: #111;
 }
 
 * {
@@ -118,6 +120,29 @@ aside {
 .boton-menu > i.bi-hand-index-thumb-fill,
 .boton-menu > i.bi-hand-index-thumb {
   transform: rotateZ(90deg);
+}
+
+.boton-menu.boton-realTime {
+  font-size: 1rem; /* un toque más grande */
+  color: var(--rt-accent); /* texto e ícono en color acento */
+  border-left: 4px solid var(--rt-accent); /* barrita de acento */
+}
+
+/* ícono un poquito más grande */
+.boton-menu.boton-realTime > i {
+  font-size: 1.1rem;
+}
+
+/* hover sutil sin romper el fondo */
+.boton-menu.boton-realTime:hover {
+  background-color: rgba(255, 209, 102, 0.12); /*  #ffd166 con ~12% opacidad */
+}
+
+/* cuando está activo, conservás el estilo blanco del resto */
+.boton-menu.boton-realTime.active {
+  /* fondo blanco y curvas siguen viniendo de .boton-menu.active */
+  color: var(--clr-main); /* que el texto se vea como el resto activos */
+  border-left-color: var(--rt-accent);
 }
 
 .boton-carrito {
@@ -760,4 +785,69 @@ main {
 .boton-secondary:hover {
   background-color: var(--clr-main);
   color: var(--clr-white);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--clr-white);
+  color: var(--clr-main);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  position: sticky; /* se queda arriba al hacer scroll dentro del main */
+  top: 0;
+  z-index: 2;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.topbar-icon {
+  font-size: 1.25rem;
+}
+
+.topbar-role {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.06);
+  color: #333;
+}
+
+/* Colores por rol (ajustá a gusto) */
+.topbar-role-admin {
+  background: #ffe08a;
+  color: #5c3d00;
+}
+.topbar-role-user {
+  background: #e7f3ff;
+  color: #083a6b;
+}
+
+.topbar-logout {
+  color: var(--clr-main);
+  font-weight: 600;
+  text-decoration: none;
+}
+.topbar-logout:hover {
+  text-decoration: underline;
+}
+.topbar-guest {
+  color: #666;
+  font-weight: 600;
+}
+.topbar-login {
+  color: var(--clr-main);
+  font-weight: 600;
+  text-decoration: none;
+}
+.topbar-login:hover {
+  text-decoration: underline;
 }

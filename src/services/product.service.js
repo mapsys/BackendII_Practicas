@@ -1,9 +1,11 @@
 // src/services/product.service.js
-import ProductDAO from "../dao/product.dao.js";
+import ProductRepository from "../repositories/product.repository.js";
+
 const ALLOWED_FIELDS = ["description", "price", "category", "thumbnails", "title", "code", "stock", "status"];
+
 export default class ProductService {
-  constructor(dao = new ProductDAO()) {
-    this.dao = dao;
+  constructor(repo = new ProductRepository()) {
+    this.repo = repo;
   }
 
   _validateCreate(data) {
@@ -11,9 +13,7 @@ export default class ProductService {
     const missing = required.filter((k) => data[k] === undefined || data[k] === null || data[k] === "");
     if (missing.length) {
       const err = new Error(
-        `${missing.length > 1 ? "Los" : "El"} campo${missing.length > 1 ? "s" : ""} ${missing.join(", ")} ${missing.length > 1 ? "son" : "es"} obligatorio${
-          missing.length > 1 ? "s" : ""
-        }`
+        `${missing.length > 1 ? "Los" : "El"} campo${missing.length > 1 ? "s" : ""} ${missing.join(", ")} ${missing.length > 1 ? "son" : "es"} obligatorio${missing.length > 1 ? "s" : ""}`
       );
       err.status = 400;
       throw err;
@@ -31,14 +31,12 @@ export default class ProductService {
   }
 
   async paginate({ limit = 10, page = 1, sort, query }) {
-    // Filtro
     const filtro = {};
     if (query) {
       if (query === "disponibles") filtro.stock = { $gt: 0 };
       else filtro.category = query;
     }
 
-    // Opciones de paginate
     const options = {
       limit: parseInt(limit),
       page: parseInt(page),
@@ -46,11 +44,11 @@ export default class ProductService {
       lean: true,
     };
 
-    return await this.dao.paginate(filtro, options);
+    return this.repo.paginate(filtro, options);
   }
 
   async getById(id) {
-    const prod = await this.dao.getProductById(id);
+    const prod = await this.repo.getById(id);
     if (!prod) {
       const err = new Error("Producto no encontrado");
       err.status = 404;
@@ -62,7 +60,7 @@ export default class ProductService {
   async create({ description, price, thumbnail, title, code, stock, category }) {
     const data = { description, price, thumbnail, title, code, stock, category };
     this._validateCreate(data);
-    return await this.dao.addProduct(description, price, thumbnail, title, code, stock, category);
+    return this.repo.create(data);
   }
 
   async update(id, updatedFields = {}) {
@@ -71,12 +69,14 @@ export default class ProductService {
       e.status = 400;
       throw e;
     }
+
     const invalid = Object.keys(updatedFields).filter((k) => !ALLOWED_FIELDS.includes(k));
     if (invalid.length) {
       const e = new Error(`Campos no válidos: ${invalid.join(", ")}`);
       e.status = 400;
       throw e;
     }
+
     if ("price" in updatedFields) {
       if (typeof updatedFields.price !== "number" || updatedFields.price <= 0) {
         const e = new Error("El precio debe ser un número positivo");
@@ -92,11 +92,10 @@ export default class ProductService {
       }
     }
     if ("thumbnails" in updatedFields && !Array.isArray(updatedFields.thumbnails)) {
-      // normalizo: acepto string y lo convierto a array
       updatedFields.thumbnails = [updatedFields.thumbnails];
     }
 
-    const prod = await this.dao.updateProduct(id, updatedFields);
+    const prod = await this.repo.update(id, updatedFields);
     if (!prod) {
       const err = new Error("Producto no encontrado");
       err.status = 404;
@@ -106,12 +105,16 @@ export default class ProductService {
   }
 
   async remove(id) {
-    const prod = await this.dao.deleteProduct(id);
+    const prod = await this.repo.remove(id);
     if (!prod) {
       const err = new Error("Producto no encontrado");
       err.status = 404;
       throw err;
     }
     return prod;
+  }
+
+  async listAll() {
+    return this.repo.getAll();
   }
 }

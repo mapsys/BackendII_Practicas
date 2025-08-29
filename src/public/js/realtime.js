@@ -1,74 +1,95 @@
 const socket = io();
+
+// —— helpers ——
 function getThumbnail(thumbnails) {
-  if (!Array.isArray(thumbnails) || !thumbnails[0] || thumbnails[0].trim() === "") {
+  if (!Array.isArray(thumbnails) || !thumbnails[0] || String(thumbnails[0]).trim() === "") {
     return "/img/no-image.png";
   }
-  return thumbnails[0];
+  return String(thumbnails[0]).trim();
 }
-// Actualizar lista de productos
-socket.on("error", (errorMessage) => {
-  alert(`Error: ${errorMessage}`);
+
+const fmtARS = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
+
+// —— listeners socket ——
+socket.on("products:error", (msg) => {
+  alert(`Error: ${msg}`);
 });
+
 socket.on("products", (products) => {
   const list = document.getElementById("product-list");
+  if (!list) return;
+
   list.innerHTML = "";
   products.forEach((product) => {
-    const li = document.createElement("div");
-    li.classList.add("realtime-producto");
-    li.innerHTML = `
-              <img class="realtime-imagen" src="${getThumbnail(product.thumbnails)}" alt="${product.title}" />
-              <div class="realtime-producto-titulo">
-                <small>Nombre</small>
-                <h4>${product.title}</h4>
-              </div>
-              <div class="realtime-producto-precio">
-                <small>Precio</small>
-                <p>${product.price}</p>
-              </div>
-            <button data-id="${product._id}" class="delete-btn"><i class="bi bi-trash-fill delete-btn" style="color: red;" data-id="${product._id}"></i></button>
-        `;
-    list.prepend(li);
+    const card = document.createElement("div");
+    card.className = "realtime-producto";
+
+    // Armado con template (rápido). Si querés máxima seguridad XSS, creá nodos y setea textContent.
+    card.innerHTML = `
+      <img class="realtime-imagen" src="${getThumbnail(product.thumbnails)}" alt="${product.title}" />
+      <div class="realtime-producto-titulo">
+        <small>Nombre</small>
+        <h4>${product.title}</h4>
+      </div>
+      <div class="realtime-producto-precio">
+        <small>Precio</small>
+        <p>${fmtARS.format(product.price)}</p>
+      </div>
+      <button data-id="${product._id}" class="delete-btn">
+        <i class="bi bi-trash-fill" style="color: red;"></i>
+      </button>
+    `;
+    // Usá append si querés conservar el orden original / prepend si querés “más nuevo arriba”
+    list.prepend(card);
   });
-  document.getElementById("product-count").textContent = `Total de productos: ${products.length}`;
+
+  const counter = document.getElementById("product-count");
+  if (counter) counter.textContent = `Total de productos: ${products.length}`;
 });
 
-// Agregar producto
+// —— agregar producto ——
 const form = document.getElementById("add-product-form");
-form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const newProduct = {
-    title: document.getElementById("title").value,
-    description: document.getElementById("description").value,
-    price: Number(document.getElementById("price").value),
-    thumbnail: document.getElementById("thumbnail").value,
-    code: document.getElementById("code").value,
-    stock: Number(document.getElementById("stock").value),
-    category: document.getElementById("category").value,
-  };
-  socket.emit("addProduct", newProduct);
-  form.reset();
-});
+if (form) {
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
 
-// Eliminar producto
-document.addEventListener("click", (e) => {
-  if (e.target.classList.contains("delete-btn")) {
-    const id = e.target.dataset.id;
-    if (confirm("¿Seguro que deseas eliminar este producto?")) {
-      socket.emit("deleteProduct", id);
+    const title = document.getElementById("title")?.value.trim();
+    const description = document.getElementById("description")?.value.trim();
+    const price = Number(document.getElementById("price")?.value);
+    const thumbnail = document.getElementById("thumbnail")?.value.trim();
+    const code = document.getElementById("code")?.value.trim();
+    const stock = Number(document.getElementById("stock")?.value);
+    const category = document.getElementById("category")?.value.trim();
+
+    if (!title || !description || !code || !category || !(price > 0) || !(stock >= 0)) {
+      alert("Completa todos los campos. Precio debe ser > 0 y stock >= 0.");
+      return;
     }
+
+    socket.emit("addProduct", { title, description, price, thumbnail, code, stock, category });
+    form.reset();
+  });
+}
+
+// —— eliminar producto (delegación sobre el documento o, mejor, sobre #product-list) ——
+const list = document.getElementById("product-list");
+(list || document).addEventListener("click", (e) => {
+  const btn = e.target.closest(".delete-btn");
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (!id) return;
+
+  if (confirm("¿Seguro que deseas eliminar este producto?")) {
+    socket.emit("deleteProduct", id);
   }
 });
 
-// Oculto los botones de categoria
+// —— lateral: oculto categorías, muestro “Seguir comprando” y oculto carrito ——
 const linksCategorias = document.querySelectorAll(".boton-categoria");
+linksCategorias.forEach((link) => link.classList.add("disable"));
+
 const linkVolver = document.querySelector(".boton-volver");
-linksCategorias.forEach((link) => {
-  link.classList.add("disable");
-});
+if (linkVolver) linkVolver.classList.remove("disable");
 
-// Muestro el boton de seguir comprando
-linkVolver.classList.remove("disable");
-
-// escondo el total del carrito
-const contenidoCarrito = document.getElementById("boton-carrito");
-contenidoCarrito.classList.add("disable");
+const botonCarrito = document.getElementById("boton-carrito");
+if (botonCarrito) botonCarrito.classList.add("disable");

@@ -1,0 +1,60 @@
+<main class="perfil">
+  {{#if user}}
+    <div class="container py-4">
+      <h2 class="mb-3">
+        <i class="bi bi-person-circle"></i>
+        Mi perfil
+      </h2>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="row gy-3">
+            <div class="col-12 col-md-6">
+              <strong>Nombre</strong><br />
+              {{user.first_name}}
+              {{user.last_name}}
+            </div>
+            <div class="col-12 col-md-6">
+              <strong>Rol</strong><br />
+              <span class="badge bg-secondary text-uppercase">{{user.role}}</span>
+            </div>
+            <div class="col-12 col-md-6">
+              <strong>Email</strong><br />
+              {{user.email}}
+            </div>
+            <div class="col-12 col-md-6">
+              <strong>Edad</strong><br />
+              {{user.age}}
+            </div>
+            <div class="col-12">
+              <strong>Carrito actual</strong><br />
+              {{#if user.cart}}
+                <a href="/carts/{{user.cart}}"><code>{{user.cart}}</code></a>
+              {{else}}
+                <span class="text-muted">Sin carrito asignado</span>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-3 d-flex gap-2">
+        <a class="btn btn-outline-primary" href="/">Volver al Home</a>
+        <a class="btn btn-outline-secondary" href="/realtimeproducts">Vista Realtime</a>
+      </div>
+    </div>
+
+  {{else}}
+    <div class="container py-4">
+      <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <div>Debes estar logueado para ver tu perfil.</div>
+      </div>
+      <a class="btn btn-primary" href="/login">Iniciar sesión</a>
+    </div>
+  {{/if}}
+</main>
+<script>
+  window.user =
+  {{#if user}}{{{json user}}}{{else}}null{{/if}};
+</script>

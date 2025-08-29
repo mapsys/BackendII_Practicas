@@ -3,7 +3,7 @@ import { Router } from "express";
 import passport from "passport";
 import ViewsController from "../controllers/views.controller.js";
 // Si tenés un authAdmin que revisa req.user.role === 'admin', reusalo:
-import { authAdmin } from "../middlewares/auth.js";
+import { authAdminView } from "../middlewares/auth.js";
 
 export default function viewsRouter() {
   const router = Router();
@@ -16,11 +16,12 @@ export default function viewsRouter() {
   router.get("/", viewAuth, controller.home);
 
   // Vista realtime (admin)
-  router.get("/realtimeproducts", viewAuth, authAdmin, controller.realTimeProducts);
+  router.get("/realtimeproducts", viewAuth, authAdminView, controller.realTimeProducts);
 
   // Detalle de carrito (usa CartService.getById(..., { populate: true }))
   router.get("/carts/:cid", viewAuth, controller.cartDetail);
-
+  // Vista de perfil
+  router.get("/profile", viewAuth, controller.profile);
   // Vistas públicas
   router.get("/register", controller.registerView);
   router.get("/login", controller.loginView);
