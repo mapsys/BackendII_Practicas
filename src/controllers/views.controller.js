@@ -96,4 +96,8 @@ export default class ViewsController {
     const userDTO = req.user ? new UserDTO(req.user) : null;
     res.render("perfil", { user: userDTO });
   };
+
+  resetPassword = (_req, res) => {
+    res.render("password", { title: "Recuperar contraseña" });
+  };
 }

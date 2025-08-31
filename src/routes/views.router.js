@@ -28,6 +28,7 @@ export default function viewsRouter() {
 
   // Vista logout (si usás sesiones de express para esta vista)
   router.get("/logout", controller.logoutView);
-
+ 
+  router.get("/password", controller.resetPassword);
   return router;
 }

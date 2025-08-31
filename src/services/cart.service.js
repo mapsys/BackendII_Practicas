@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import CartRepository from "../repositories/cart.repository.js";
-import Producto from "../models/producto.model.js"; 
+import Producto from "../models/producto.model.js";
 
 const isObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 const ALLOWED_STATUS = ["activo", "comprado", "cancelado"];
@@ -28,6 +28,7 @@ export default class CartService {
     return await this.repo.create();
   }
 
+  // cart.service.js
   async addProduct(cartId, productId, qty) {
     if (!isObjectId(cartId) || !isObjectId(productId)) {
       const e = new Error("ID inválido");
@@ -40,25 +41,34 @@ export default class CartService {
       throw e;
     }
 
-    // validar producto y stock
-    const prod = await Producto.findById(productId).lean();
+    // Traigo carrito y producto
+    const [cart, prod] = await Promise.all([
+      this.repo.findById(cartId), // tu DAO/Repo ya lo tiene
+      Producto.findById(productId).lean(),
+    ]);
+
+    if (!cart) {
+      const e = new Error("Carrito no encontrado");
+      e.status = 404;
+      throw e;
+    }
     if (!prod) {
       const e = new Error("Producto no encontrado");
       e.status = 404;
       throw e;
     }
-    if (!prod.status || prod.stock < qty) {
-      const e = new Error("No hay suficiente stock");
+
+    // Cantidad que ya había en el carrito de ese producto
+    const existingQty = cart.products?.find((p) => p.product.toString() === productId)?.quantity ?? 0;
+    const desired = existingQty + qty;
+
+    if (!prod.status || desired > prod.stock) {
+      const e = new Error(`No hay suficiente stock. Disponible: ${prod.stock}. Ya en carrito: ${existingQty}.`);
       e.status = 400;
       throw e;
     }
 
     const updated = await this.repo.addProduct(cartId, productId, qty);
-    if (!updated) {
-      const e = new Error("Carrito no encontrado");
-      e.status = 404;
-      throw e;
-    }
     return updated;
   }
 
@@ -127,6 +137,7 @@ export default class CartService {
     return updated;
   }
 
+  // cart.service.js
   async updateQuantity(cartId, productId, quantity) {
     if (!isObjectId(cartId) || !isObjectId(productId)) {
       const e = new Error("ID inválido");
@@ -138,6 +149,7 @@ export default class CartService {
       e.status = 400;
       throw e;
     }
+
     if (quantity > 0) {
       const prod = await Producto.findById(productId).lean();
       if (!prod) {
@@ -145,8 +157,8 @@ export default class CartService {
         e.status = 404;
         throw e;
       }
-      if (!prod.status || prod.stock < quantity) {
-        const e = new Error("No hay suficiente stock");
+      if (!prod.status || quantity > prod.stock) {
+        const e = new Error(`No hay suficiente stock. Disponible: ${prod.stock}.`);
         e.status = 400;
         throw e;
       }
@@ -172,12 +184,47 @@ export default class CartService {
       e.status = 400;
       throw e;
     }
-    const updated = await this.repo.updateStatus(cartId, status);
-    if (!updated) {
+
+    if (status !== "comprado") {
+      const updated = await this.repo.updateStatus(cartId, status);
+      if (!updated) {
+        const e = new Error("Carrito no encontrado");
+        e.status = 404;
+        throw e;
+      }
+      return updated;
+    }
+
+    // Status "comprado": validar y descontar stock
+    const cart = await this.repo.findById(cartId, { populate: true });
+    if (!cart) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
       throw e;
     }
+
+    // 1) Validación final de stock
+    for (const item of cart.products) {
+      const prod = await Producto.findById(item.product._id).lean();
+      if (!prod || !prod.status || prod.stock < item.quantity) {
+        const e = new Error(`Stock insuficiente para ${item.product.title}`);
+        e.status = 400;
+        throw e;
+      }
+    }
+
+    // 2) Descuento atómico (simple) por ítem
+    for (const item of cart.products) {
+      const res = await Producto.updateOne({ _id: item.product._id, stock: { $gte: item.quantity } }, { $inc: { stock: -item.quantity } });
+      if (res.matchedCount !== 1 || res.modifiedCount !== 1) {
+        const e = new Error(`No se pudo descontar stock para ${item.product.title}`);
+        e.status = 409; // conflicto de concurrencia
+        throw e;
+      }
+    }
+
+    // 3) Marcar carrito como comprado
+    const updated = await this.repo.updateStatus(cartId, "comprado");
     return updated;
   }
 

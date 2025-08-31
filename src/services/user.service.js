@@ -3,8 +3,10 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import Cart from "../models/cart.model.js";
 import UserRepository from "../repositories/user.repository.js";
-
+import {sendPasswordResetEmail} from "../utils/mailer.js";
 const JWT_SECRET = process.env.JWT_SECRET || "coderSecret";
+const RESET_SECRET = process.env.JWT_RESET_SECRET || process.env.JWT_SECRET || "coderSecret";
+const APP_BASE_URL = process.env.APP_BASE_URL || "http://localhost:8080";
 const isObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 function sanitizeUser(u) {
@@ -99,5 +101,41 @@ export default class UserService {
     if (!user) return null;
     const { password, ...safe } = user;
     return safe;
+  }
+
+  async requestPasswordReset(email) {
+    const user = await this.repo.findByEmail(email);
+    if (!user) return;
+    const token = jwt.sign({ uid: user._id }, RESET_SECRET, { expiresIn: "1h" });
+    const link = `${APP_BASE_URL}/password?token=${encodeURIComponent(token)}`;
+    await sendPasswordResetEmail(user.email, link);
+  }
+
+  async resetPassword({ tokenPlain, newPassword }) {
+    let payload;
+    try {
+      payload = jwt.verify(tokenPlain, RESET_SECRET);
+    } catch {
+      const e = new Error("Enlace inválido o expirado");
+      e.status = 400;
+      throw e;
+    }
+
+    const user = await this.repo.findById(payload.uid);
+    if (!user) {
+      const e = new Error("Usuario no encontrado");
+      e.status = 404;
+      throw e;
+    }
+
+    const same = await bcrypt.compare(newPassword, user.password);
+    if (same) {
+      const e = new Error("La nueva contraseña no puede ser igual a la anterior.");
+      e.status = 400;
+      throw e;
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await this.repo.updateById(user._id, { password: hashed });
   }
 }

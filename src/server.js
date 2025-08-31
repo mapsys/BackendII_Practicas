@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import express from "express";
 import exphbs from "express-handlebars";
 import { fileURLToPath } from "url";
@@ -13,7 +14,6 @@ import { Server } from "socket.io";
 import { connectDB } from "./config/mongo.js";
 import { configureSockets } from "./sockets/index.js";
 import cors from "cors";
-import dotenv from "dotenv";
 import passport from "passport";
 import { iniciarPassport } from "./config/passport.config.js";
 import cookieParser from "cookie-parser";

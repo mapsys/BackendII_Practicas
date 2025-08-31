@@ -106,4 +106,23 @@ export default class SessionsController {
       next(e);
     }
   };
+  forgotPassword = async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      await this.service.requestPasswordReset(email);;
+      res.status(200).json({ message: "Si el correo existe, te enviamos un enlace para restablecer la contraseña." });
+    } catch (e) {
+      next(e);
+    }
+  };
+
+  resetPassword = async (req, res, next) => {
+    try {
+      const { token, password } = req.body;
+      await this.service.resetPassword({ tokenPlain: token, newPassword: password });
+      res.status(200).json({ message: "Contraseña actualizada correctamente" });
+    } catch (e) {
+      next(e);
+    }
+  };
 }

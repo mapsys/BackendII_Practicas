@@ -55,6 +55,17 @@ function randomObjectId() {
   return id;
 }
 
+// Helpers de lectura específicos
+async function getProduct(http, id) {
+  const r = await http.get(`/api/products/${id}`);
+  return { status: r.status, data: r.data };
+}
+
+async function getCart(http, id) {
+  const r = await http.get(`/api/carts/${id}`);
+  return { status: r.status, data: r.data };
+}
+
 (async () => {
   try {
     // ---------------- SESSIONS (USER) ----------------
@@ -65,7 +76,7 @@ function randomObjectId() {
     // Register con campos faltantes → 401 (passport registro)
     await expectStatus(httpUser.post("/api/sessions/register", { email: `${rid("bad")}@test.com`, password: userPass, first_name: "A" }), 401, "register faltan campos (user)");
 
-    // Register OK
+    // Register OK (201)
     await expectStatus(
       httpUser.post("/api/sessions/register", {
         email: userEmail,
@@ -107,7 +118,7 @@ function randomObjectId() {
     const codeB = rid("codeB");
     let productA, productB;
 
-    // Crear producto sin cookie → 401 (no autenticado)
+    // Crear producto sin cookie → 401/403
     await expectOneOf(
       httpAnon.post("/api/products", {
         title: "Anon Prod",
@@ -121,7 +132,7 @@ function randomObjectId() {
       "crear producto sin login"
     );
 
-    // Crear producto con user no-admin → 401/403 (forbidden)
+    // Crear producto con user no-admin → 401/403
     await expectOneOf(
       httpUser.post("/api/products", {
         title: "User Prod",
@@ -140,7 +151,7 @@ function randomObjectId() {
     const adminEmail = `${rid("admin")}@coder.com`; // tu lógica: @coder.com => admin
     const adminPass = "secret123";
 
-    // Register admin OK
+    // Register admin OK (201)
     await expectStatus(
       httpAdmin.post("/api/sessions/register", {
         email: adminEmail,
@@ -258,7 +269,7 @@ function randomObjectId() {
     // ---------------- CARTS ----------------
     sep("CARTS");
 
-    // Crear carrito → 201 (según tu router puede o no requerir login)
+    // Crear carrito → 201
     const cart = await expectStatus(httpUser.post("/api/carts", {}), 201, "crear carrito").then((r) => r.data);
 
     // Agregar qty=0 → 400
@@ -267,7 +278,7 @@ function randomObjectId() {
     // Agregar productId inválido → 400
     await expectStatus(httpUser.post(`/api/carts/${cart._id || cart.id}/products/123`, { qty: 1 }), 400, "add product id inválido");
 
-    // Agregar producto inexistente (ObjectId válido aleatorio) → 404 o 400 según tu servicio
+    // Agregar producto inexistente → 400/404
     await expectOneOf(httpUser.post(`/api/carts/${cart._id || cart.id}/products/${randomObjectId()}`, { qty: 1 }), [400, 404], "add product id válido pero inexistente");
 
     // Agregar superando stock (A stock=1, pido 5) → 400
@@ -279,7 +290,7 @@ function randomObjectId() {
     // Update qty string → 400
     await expectStatus(httpUser.put(`/api/carts/${cart._id || cart.id}/products/${productA.id || productA._id}`, { quantity: "cinco" }), 400, "update qty tipo inválido");
 
-    // Update qty negativo → 200 (lo elimina del carrito)
+    // Update qty negativo → 200 (elimina)
     await expectStatus(httpUser.put(`/api/carts/${cart._id || cart.id}/products/${productA.id || productA._id}`, { quantity: -3 }), 200, "update qty negativo (elimina)");
 
     // Eliminar producto que no está → 404
@@ -294,6 +305,79 @@ function randomObjectId() {
     // Vaciar carrito → 200
     await expectStatus(httpUser.delete(`/api/carts/${cart._id || cart.id}`), 200, "vaciar carrito");
 
+    // ---------------- STOCK & PURCHASE ----------------
+    sep("STOCK & PURCHASE");
+
+    // Creamos producto C (stock 3, price 100)
+    const codeC = rid("codeC");
+    const productC = await expectStatus(
+      httpAdmin.post("/api/products", {
+        title: "Prod C",
+        description: "C",
+        price: 100,
+        code: codeC,
+        stock: 3,
+        category: "test",
+      }),
+      201,
+      "crear producto C (admin)"
+    ).then((r) => r.data);
+
+    // Carrito 2 para este flujo
+    const cart2 = await expectStatus(httpUser.post("/api/carts", {}), 201, "crear carrito 2").then((r) => r.data);
+
+    // Intento setear cantidad por encima del stock vía UPDATE → 400
+    await expectStatus(httpUser.put(`/api/carts/${cart2._id || cart2.id}/products/${productC._id || productC.id}`, { quantity: 10 }), 400, "update qty > stock (debe fallar)");
+
+    // Agrego qty=2 OK
+    await expectStatus(httpUser.post(`/api/carts/${cart2._id || cart2.id}/products/${productC._id || productC.id}`, { qty: 2 }), 200, "add product C qty=2 ok");
+
+    // Bajo stock del producto a 1 para forzar compra fallida
+    await expectStatus(httpAdmin.put(`/api/products/${productC._id || productC.id}`, { stock: 1 }), 200, "bajar stock C a 1 (admin)");
+
+    // Intento comprar → debe fallar 400 por stock insuficiente
+    await expectStatus(httpUser.put(`/api/carts/${cart2._id || cart2.id}/status`, { status: "comprado" }), 400, "comprar con stock insuficiente (debe fallar)");
+
+    // El carrito debe seguir activo y con productos
+    const readCartAfterFail = await getCart(httpUser, cart2._id || cart2.id);
+    if (readCartAfterFail.status === 200) {
+      const c = readCartAfterFail.data;
+      if ((c.status || c.estado) === "activo" && Array.isArray(c.products) && c.products.length > 0) {
+        ok("carrito sigue activo y con productos tras compra fallida");
+      } else {
+        bad("carrito NO quedó activo o quedó vacío tras compra fallida");
+      }
+    } else {
+      bad("no pude leer carrito tras compra fallida");
+    }
+
+    // Subo stock a 5 y compro de nuevo → 200
+    const beforeProd = await getProduct(httpAdmin, productC._id || productC.id);
+    const stockBefore = beforeProd.status === 200 ? beforeProd.data.stock ?? beforeProd.data?.payload?.stock : undefined;
+
+    await expectStatus(httpAdmin.put(`/api/products/${productC._id || productC.id}`, { stock: 5 }), 200, "subir stock C a 5 (admin)");
+
+    await expectStatus(httpUser.put(`/api/carts/${cart2._id || cart2.id}/status`, { status: "comprado" }), 200, "comprar OK con stock suficiente");
+
+    // Verifico carrito comprado
+    const readCartAfterOk = await getCart(httpUser, cart2._id || cart2.id);
+    if (readCartAfterOk.status === 200) {
+      const c = readCartAfterOk.data;
+      if ((c.status || c.estado) === "comprado") ok("carrito marcado como comprado");
+      else bad("carrito NO quedó como 'comprado'");
+    }
+
+    // Verifico que stock haya decrementado en 2 (si tu backend descuenta stock al comprar)
+    const afterProd = await getProduct(httpAdmin, productC._id || productC.id);
+    if (afterProd.status === 200 && typeof stockBefore === "number") {
+      const stockAfter = afterProd.data.stock ?? afterProd.data?.payload?.stock;
+      if (typeof stockAfter === "number" && stockAfter === stockBefore - 2) {
+        ok(`stock decrementado correctamente (${stockBefore} -> ${stockAfter})`);
+      } else {
+        bad(`stock no se decrementó como se esperaba. Antes=${stockBefore}, Después=${stockAfter}`);
+      }
+    }
+
     // ---------------- PRODUCTS delete (roles) ----------------
     sep("PRODUCTS DELETE (roles)");
 
@@ -303,20 +387,15 @@ function randomObjectId() {
     // Borrar product id inválido con admin → 400
     await expectStatus(httpAdmin.delete("/api/products/123"), 400, "delete id inválido (admin)");
 
-    // Borrar OK con admin → 200
-    await expectOneOf(
-      httpAdmin.delete(`/api/products/${productB.id || productB._id}`),
-      [200, 204], // según cómo respondas
-      "delete product B (admin)"
-    );
+    // Borrar OK con admin → 200/204
+    await expectOneOf(httpAdmin.delete(`/api/products/${productB.id || productB._id}`), [200, 204], "delete product B (admin)");
 
     // ---------------- LOGOUTS ----------------
     sep("SESSIONS (logout)");
-
     await expectStatus(httpUser.get("/api/sessions/logout"), 200, "logout ok (user)");
     await expectStatus(httpAdmin.get("/api/sessions/logout"), 200, "logout ok (admin)");
 
-    // Current sin cookie → 401
+    // Current sin cookie → 401/403
     await expectOneOf(httpAnon.get("/api/sessions/current"), [401, 403], "current sin cookie");
 
     sep("LISTO ✅");

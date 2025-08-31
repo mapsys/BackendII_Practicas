@@ -27,6 +27,8 @@ export default function sessionsRouter() {
   router.get("/current", passportCall("current"), controller.currentFromToken);
   // o si querés leer de DB:
   // router.get("/current", passportCall("current"), controller.current);
-
+  // Password reset
+  router.post("/forgot-password", controller.forgotPassword);
+  router.post("/reset-password", controller.resetPassword);
   return router;
 }
