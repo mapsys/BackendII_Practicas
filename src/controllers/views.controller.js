@@ -2,6 +2,7 @@
 import ProductService from "../services/product.service.js";
 import CartService from "../services/cart.service.js";
 import mongoose from "mongoose";
+import UserDTO from "../dtos/user.dto.js";
 
 export default class ViewsController {
   constructor({ productService = new ProductService(), cartService = new CartService() } = {}) {
@@ -13,7 +14,7 @@ export default class ViewsController {
     try {
       // Reusa la paginación del service
       const result = await this.products.paginate(req.query); // docs, totalPages, etc.
-
+      const userDTO = req.user ? new UserDTO(req.user) : null;
       res.render("home", {
         products: result.docs,
         totalPages: result.totalPages,
@@ -26,7 +27,7 @@ export default class ViewsController {
         sort: req.query.sort,
         limit: req.query.limit,
         title: "My eCommerce",
-        user: req.user,
+        user: userDTO,
       });
     } catch (err) {
       next(err);
@@ -37,7 +38,8 @@ export default class ViewsController {
     try {
       // Si querés estrictamente "todos", podés pedir un límite grande:
       const result = await this.products.paginate({ limit: 1000, page: 1 });
-      res.render("realTimeProducts", { products: result.docs, user: req.user, title: "Productos en tiempo real" });
+      const userDTO = req.user ? new UserDTO(req.user) : null;
+      res.render("realTimeProducts", { products: result.docs, user: userDTO, title: "Productos en tiempo real" });
     } catch (err) {
       next(err);
     }
@@ -66,12 +68,12 @@ export default class ViewsController {
       });
 
       const total = productosConSubtotal.reduce((acc, p) => acc + p.subtotal, 0);
-
+      const userDTO = req.user ? new UserDTO(req.user) : null;
       res.render("cartDetail", {
         title: "Tu Carrito",
         productos: productosConSubtotal,
         total,
-        user: req.user,
+        user: userDTO,
       });
     } catch (err) {
       next(err);
@@ -91,6 +93,7 @@ export default class ViewsController {
   };
 
   profile = (req, res) => {
-    res.render("perfil", { user: req.user });
+    const userDTO = req.user ? new UserDTO(req.user) : null;
+    res.render("perfil", { user: userDTO });
   };
 }

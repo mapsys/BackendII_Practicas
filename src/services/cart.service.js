@@ -1,22 +1,21 @@
-// src/services/cart.service.js
 import mongoose from "mongoose";
-import CartDAO from "../dao/cart.dao.js";
-import Producto from "../models/producto.model.js"; // para validar existencia/stock
+import CartRepository from "../repositories/cart.repository.js";
+import Producto from "../models/producto.model.js"; 
 
 const isObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
-const ALLOWED_STATUS = ["activo", "comprado", "cancelado"]; // ajustá si querés
+const ALLOWED_STATUS = ["activo", "comprado", "cancelado"];
 
 export default class CartService {
-  constructor(dao = new CartDAO()) {
-    this.dao = dao;
+  constructor(repo = new CartRepository()) {
+    this.repo = repo;
   }
 
   async list() {
-    return await this.dao.findAll();
+    return await this.repo.findAll();
   }
 
   async getById(id, opts) {
-    const cart = await this.dao.findById(id, opts);
+    const cart = await this.repo.findById(id, opts);
     if (!cart) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
@@ -26,7 +25,7 @@ export default class CartService {
   }
 
   async create() {
-    return await this.dao.create();
+    return await this.repo.create();
   }
 
   async addProduct(cartId, productId, qty) {
@@ -54,7 +53,7 @@ export default class CartService {
       throw e;
     }
 
-    const updated = await this.dao.addProduct(cartId, productId, qty);
+    const updated = await this.repo.addProduct(cartId, productId, qty);
     if (!updated) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
@@ -69,7 +68,7 @@ export default class CartService {
       e.status = 400;
       throw e;
     }
-    const res = await this.dao.removeProduct(cartId, productId);
+    const res = await this.repo.removeProduct(cartId, productId);
     if (res === null) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
@@ -84,7 +83,7 @@ export default class CartService {
   }
 
   async clear(cartId) {
-    const updated = await this.dao.clearProducts(cartId);
+    const updated = await this.repo.clearProducts(cartId);
     if (!updated) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
@@ -100,7 +99,6 @@ export default class CartService {
       throw e;
     }
 
-    // validar shape, ids y cantidades
     for (const p of products) {
       if (!isObjectId(p.product)) {
         const e = new Error("ID de producto inválido");
@@ -112,7 +110,6 @@ export default class CartService {
         e.status = 400;
         throw e;
       }
-      // validar existencia (opcionalmente stock total, aquí omitimos sumar por simplicidad)
       const exists = await Producto.exists({ _id: p.product });
       if (!exists) {
         const e = new Error("Producto no encontrado");
@@ -121,7 +118,7 @@ export default class CartService {
       }
     }
 
-    const updated = await this.dao.replaceProducts(cartId, products);
+    const updated = await this.repo.replaceProducts(cartId, products);
     if (!updated) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
@@ -155,7 +152,7 @@ export default class CartService {
       }
     }
 
-    const res = await this.dao.updateQuantity(cartId, productId, quantity);
+    const res = await this.repo.updateQuantity(cartId, productId, quantity);
     if (res === null) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
@@ -175,7 +172,7 @@ export default class CartService {
       e.status = 400;
       throw e;
     }
-    const updated = await this.dao.updateStatus(cartId, status);
+    const updated = await this.repo.updateStatus(cartId, status);
     if (!updated) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
@@ -186,12 +183,12 @@ export default class CartService {
 
   async totals(cartId) {
     // valida existencia del carrito primero
-    const exists = await this.dao.findById(cartId);
+    const exists = await this.repo.findById(cartId);
     if (!exists) {
       const e = new Error("Carrito no encontrado");
       e.status = 404;
       throw e;
     }
-    return await this.dao.calculateTotals(cartId);
+    return await this.repo.calculateTotals(cartId);
   }
 }

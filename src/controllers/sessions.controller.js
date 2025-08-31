@@ -1,57 +1,74 @@
 // src/controllers/sessions.controller.js
+import jwt from "jsonwebtoken"; // ✅ ESM (no uses require)
 import UserService from "../services/user.service.js";
+import UserDTO from "../dtos/user.dto.js";
+
+const JWT_SECRET = process.env.JWT_SECRET || "coderSecret";
+const cookieOpts = {
+  httpOnly: true,
+  ...(process.env.NODE_ENV === "production" ? { secure: true, sameSite: "strict" } : { sameSite: "lax" }),
+  maxAge: 60 * 60 * 1000, // 1h
+};
 
 export default class SessionsController {
   constructor(service = new UserService()) {
     this.service = service;
   }
 
-  // Si usás passportCall("registro"): req.user te lo da la estrategia
+  // Si usás passportCall("registro"), req.user ya viene del strategy
   registerFromPassport = async (req, res, next) => {
     try {
-      res.json({
-        message: `Registro exitoso para ${req.user.first_name || req.user.nombre || req.user.email}`,
-        usuarioCreado: req.user,
+      const dto = new UserDTO(req.user); // ✅ no exponemos password/age
+      res.status(201).json({
+        message: `Registro exitoso para ${dto.first_name || dto.email}`,
+        usuarioCreado: dto,
       });
-    } catch (e) { next(e); }
+    } catch (e) {
+      next(e);
+    }
   };
 
-  // Alternativa sin Passport para register:
+  // Alternativa sin Passport
   registerDirect = async (req, res, next) => {
     try {
       const user = await this.service.register(req.body);
-      res.status(201).json({ message: "Registro exitoso", usuarioCreado: user });
-    } catch (e) { next(e); }
+      const dto = new UserDTO(user);
+      res.status(201).json({ message: "Registro exitoso", usuarioCreado: dto });
+    } catch (e) {
+      next(e);
+    }
   };
 
-  // Con passportCall("login") ya tenés req.user; pero firmamos el JWT acá
+  // Con passportCall("login") ya validaste credenciales → sólo firmá el token
   loginFromPassport = async (req, res, next) => {
     try {
-      // req.user viene "safe" desde la estrategia
+      const dto = new UserDTO(req.user);
       const payload = {
-        _id: req.user._id,
-        email: req.user.email,
-        role: req.user.role,
-        first_name: req.user.first_name,
-        last_name: req.user.last_name,
-        cart: req.user.cart,
+        _id: dto._id,
+        email: dto.email, // si no querés exponer email, sacalo del DTO y del payload
+        role: dto.role,
+        first_name: dto.first_name,
+        last_name: dto.last_name,
+        cart: dto.cart,
       };
-      const jwt = await this.service.login({ email: payload.email, password: req.body.password })
-        .catch(() => ({ token: null, user: req.user })); // si ya validó la strategy, puede omitirse
-      const token = jwt?.token ?? require("jsonwebtoken").sign(payload, process.env.JWT_SECRET || "coderSecret", { expiresIn: "1h" });
-
-      res.cookie("cookieToken", token, { httpOnly: true });
-      res.status(200).json({ usuarioLogueado: req.user });
-    } catch (e) { next(e); }
+      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+      res.cookie("cookieToken", token, cookieOpts);
+      res.status(200).json({ usuarioLogueado: dto });
+    } catch (e) {
+      next(e);
+    }
   };
 
-  // Alternativa sin Passport para login:
+  // Alternativa sin Passport (usa el service para validar + generar token)
   loginDirect = async (req, res, next) => {
     try {
       const { user, token } = await this.service.login(req.body);
-      res.cookie("cookieToken", token, { httpOnly: true });
-      res.status(200).json({ usuarioLogueado: user });
-    } catch (e) { next(e); }
+      const dto = new UserDTO(user);
+      res.cookie("cookieToken", token, cookieOpts);
+      res.status(200).json({ usuarioLogueado: dto });
+    } catch (e) {
+      next(e);
+    }
   };
 
   logout = async (_req, res, _next) => {
@@ -62,22 +79,31 @@ export default class SessionsController {
   setCart = async (req, res, next) => {
     try {
       const updated = await this.service.setCart(req.user._id, req.body.newCartId);
-      res.json({ mensaje: "Carrito del usuario actualizado", user: updated });
-    } catch (e) { next(e); }
+      const dto = new UserDTO(updated);
+      res.json({ message: "Carrito del usuario actualizado", user: dto });
+    } catch (e) {
+      next(e);
+    }
   };
 
-  // Si querés traerlo de DB para tener info fresca:
+  // /current consultando DB para info fresca
   current = async (req, res, next) => {
     try {
-      const user = await this.service.getCurrentFromDB(req.user._id || req.user.user?._id || req.user.id);
-      res.status(200).json({ user });
-    } catch (e) { next(e); }
+      const dbUser = await this.service.getCurrentFromDB(req.user._id);
+      const dto = new UserDTO(dbUser);
+      res.status(200).json({ user: dto });
+    } catch (e) {
+      next(e);
+    }
   };
 
-  // Si preferís devolver el token payload sin ir a DB:
+  // /current (si preferís responder con lo del token directamente)
   currentFromToken = async (req, res, next) => {
     try {
-      res.status(200).json({ user: req.user });
-    } catch (e) { next(e); }
+      const dto = new UserDTO(req.user);
+      res.status(200).json({ user: dto });
+    } catch (e) {
+      next(e);
+    }
   };
 }

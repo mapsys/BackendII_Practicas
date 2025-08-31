@@ -74,7 +74,7 @@ function randomObjectId() {
         last_name: "Lovelace",
         age: 28,
       }),
-      200,
+      201,
       "register ok (user)"
     );
 
@@ -149,7 +149,7 @@ function randomObjectId() {
         last_name: "Admin",
         age: 33,
       }),
-      200,
+      201,
       "register ok (admin)"
     );
 

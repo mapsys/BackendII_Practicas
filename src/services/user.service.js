@@ -1,9 +1,8 @@
-// src/services/user.service.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import Cart from "../models/cart.model.js";
-import UserDAO from "../dao/user.dao.js";
+import UserRepository from "../repositories/user.repository.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "coderSecret";
 const isObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -15,12 +14,11 @@ function sanitizeUser(u) {
 }
 
 export default class UserService {
-  constructor(dao = new UserDAO()) {
-    this.dao = dao;
+  constructor(repo = new UserRepository()) {
+    this.repo = repo;
   }
 
   async register({ first_name, last_name, email, password, age }) {
-    // Validaciones mínimas
     const required = { first_name, last_name, email, password, age };
     const missing = Object.entries(required).filter(([, v]) => v == null || v === "");
     if (missing.length) {
@@ -31,24 +29,22 @@ export default class UserService {
       throw e;
     }
 
-    const exists = await this.dao.existsByEmail(email);
+    const exists = await this.repo.existsByEmail(email);
     if (exists) {
       const e = new Error(`El usuario con email ${email} ya existe`);
       e.status = 400;
       throw e;
     }
 
-    // Crear cart y determinar role
     const newCart = await Cart.create({ products: [] });
     const role = email.toLowerCase().endsWith("@coder.com") ? "admin" : "user";
 
-    // UserSchema hace hash en pre('save')
-    const user = await this.dao.create({ first_name, last_name, email, password, age, role, cart: newCart._id });
+    const user = await this.repo.create({ first_name, last_name, email, password, age, role, cart: newCart._id });
     return sanitizeUser(user);
   }
 
   async login({ email, password }) {
-    const user = await this.dao.findByEmail(email);
+    const user = await this.repo.findByEmail(email);
     if (!user) {
       const e = new Error("Usuario/Contraseña incorrectos");
       e.status = 401;
@@ -79,7 +75,7 @@ export default class UserService {
       e.status = 400;
       throw e;
     }
-    const updated = await this.dao.setCart(userId, newCartId);
+    const updated = await this.repo.setCart(userId, newCartId);
     if (!updated) {
       const e = new Error("Usuario no encontrado");
       e.status = 404;
@@ -89,7 +85,7 @@ export default class UserService {
   }
 
   async getCurrentFromDB(userId) {
-    const user = await this.dao.findById(userId);
+    const user = await this.repo.findById(userId);
     if (!user) {
       const e = new Error("Usuario no encontrado");
       e.status = 404;
@@ -99,7 +95,7 @@ export default class UserService {
   }
 
   async findByIdSafe(id) {
-    const user = await this.dao.findByIdLean(id);
+    const user = await this.repo.findByIdLean(id);
     if (!user) return null;
     const { password, ...safe } = user;
     return safe;

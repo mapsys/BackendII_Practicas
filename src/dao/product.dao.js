@@ -18,7 +18,6 @@ export default class ProductDAO {
   }
 
   async addProduct(description, price, thumbnail, title, code, stock, categoria) {
-    // ✅ Validaciones mínimas (por ahora quedan aquí)
     if (!description || !price || !title || !code || stock === undefined) {
       throw new Error("Los campos Title, Description, Price, Code y Stock son obligatorios");
     }

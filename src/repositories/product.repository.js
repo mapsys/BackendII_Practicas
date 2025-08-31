@@ -22,7 +22,6 @@ export default class ProductRepository {
 
   // Escrituras
   async create({ description, price, thumbnail, title, code, stock, category }) {
-    // Reuso la firma actual del DAO
     return this.dao.addProduct(description, price, thumbnail, title, code, stock, category);
   }
   async update(id, fields) {
