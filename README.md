@@ -18,6 +18,7 @@ Este proyecto corresponde a la **Entrega N°1 del curso Backend II**, donde se i
 ```
 src/
 ├── config/              # Configuración de Passport, MongoDB y utilidades
+├── controllers/         # Lógica de negocio para usuarios, productos y carritos 
 ├── managers/            # Lógica de negocio para usuarios, productos y carritos
 ├── middlewares/         # Middlewares personalizados
 ├── models/              # Esquemas de Mongoose
@@ -26,6 +27,7 @@ src/
 ├── sockets/             # Websockets para actualizaciones en tiempo real
 ├── views/               # Vistas Handlebars
 └── server.js            # Punto de entrada principal
+
 ```
 
 ## 👤 Modelo de Usuario

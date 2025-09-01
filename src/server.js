@@ -10,6 +10,7 @@ import productsRouter from "./routes/products.router.js";
 import sessionsRouter from "./routes/sessions.router.js";
 import cartsRouter from "./routes/carts.router.js";
 import viewsRouter from "./routes/views.router.js";
+import ticketsRouter from "./routes/tickets.router.js";
 import { Server } from "socket.io";
 import { connectDB } from "./config/mongo.js";
 import { configureSockets } from "./sockets/index.js";
@@ -73,6 +74,7 @@ app.use("/api/products", productsRouter());
 app.use("/api/carts", cartsRouter());
 app.use("/", viewsRouter(productManager, cartManager));
 app.use("/api/sessions", sessionsRouter());
+app.use("/api/tickets", ticketsRouter());
 app.use(errorHandler);
 // WebSocket connection
 configureSockets(io, { productService });
