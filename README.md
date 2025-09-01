@@ -52,7 +52,10 @@ src/
 server.js           # punto de entrada
 ```
 
-
+## Users
+Para dar de alta productos o eliminar, debera tener Rol Admin
+Para tener role admin el mail debe ser @coder.com
+De lo contrario sera user
 
 ## 🔐 Autenticación y autorización
 
@@ -86,7 +89,7 @@ server.js           # punto de entrada
 
 ### Carts (`/api/carts`)
 - `POST   /` → Crear carrito (201)
-- `GET    /:cid` → (con `populate` desde service)
+- `GET    /:cid` → (con `populate` desde service) 
 - `POST   /:cid/products/:pid`  ({ qty })
 - `PUT    /:cid/products/:pid`  ({ quantity })
 - `DELETE /:cid/products/:pid`
