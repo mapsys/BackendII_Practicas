@@ -1,85 +1,200 @@
-# 🛍️ eCommerce Backend con Autenticación y Autorización (JWT + Passport)
+# 🛍️ eCommerce Backend (JWT + Passport + MVC/DAO/Repository)
 
-Este proyecto corresponde a la **Entrega N°1 del curso Backend II**, donde se implementa un sistema completo de gestión de usuarios con autenticación basada en JSON Web Tokens (JWT) y autorización mediante estrategias de Passport.js.
+Backend del curso **Backend II** con autenticación por **JWT** y autorización con **Passport**. Implementa un e-commerce con **productos**, **carritos** y **tickets de compra**; vistas con **Handlebars**; tiempo real con **Socket.io**; **DTOs**; **Repository pattern**; middlewares de seguridad; y **recuperación de contraseña** vía email.
 
-## 🔧 Tecnologías utilizadas
+---
 
-- Node.js
-- Express
+## 🚀 Features
+
+- Login/registro con **JWT** (cookie `httpOnly`).
+- Rutas protegidas con **Passport** (`current`) y **roles** (admin).
+- Arquitectura por capas: **DAO → Repository → Service → Controller**.
+- **DTO** para sanitizar `/api/sessions/current`.
+- **Productos** (CRUD admin), **Carritos**, **Tickets**.
+- **Compra**: valida stock, descuenta, marca carrito y genera **Ticket**.
+- **Vistas** (Handlebars) + **Socket.io** (RealTime Products, admin).
+- **Recuperación de contraseña** (link con expiración 1h, Nodemailer).
+- **Manejo de errores** centralizado + validación de ObjectId.
+
+---
+
+## 🧱 Stack
+
+- Node.js, Express
 - MongoDB + Mongoose
-- Passport.js
-- bcryptjs
-- JWT (jsonwebtoken)
-- Express Handlebars
-- WebSockets (Socket.io)
+- Passport.js (local + JWT)
+- jsonwebtoken, bcryptjs
+- Express-Handlebars
+- Socket.io
+- Nodemailer
 
-## 📁 Estructura del proyecto
+---
+
+## 📁 Estructura
 
 ```
 src/
-├── config/              # Configuración de Passport, MongoDB y utilidades
-├── controllers/         # Lógica de negocio para usuarios, productos y carritos 
-├── managers/            # Lógica de negocio para usuarios, productos y carritos
-├── middlewares/         # Middlewares personalizados
-├── models/              # Esquemas de Mongoose
-├── public/              # Archivos estáticos (JS, CSS, imágenes)
-├── routes/              # Rutas de la API y vistas
-├── sockets/             # Websockets para actualizaciones en tiempo real
-├── views/               # Vistas Handlebars
-└── server.js            # Punto de entrada principal
-
+├─ config/          # Mongo, Passport, helpers de configuración
+├─ controllers/     # Controladores HTTP
+├─ dao/             # Acceso a datos (Mongoose)
+├─ data/            # (opcional) semillas/fixtures
+├─ dto/             # DTOs (UserDTO, etc.)
+├─ managers/        # (legado) si aplica
+├─ middleware/      # auth, authAdmin, ensureObjectId, errorHandler, passportCall
+├─ models/          # Schemas Mongoose (user, producto, cart, ticket)
+├─ public/          # Frontend (JS, CSS, imágenes)
+├─ repositories/    # Abstracción sobre DAO (Repository pattern)
+├─ routes/          # Rutas API y vistas
+├─ services/        # Reglas de negocio (stock, compras, etc.)
+├─ sockets/         # Socket.io (realTimeProducts)
+├─ utils/           # mailer (Nodemailer), helpers
+└─ views/           # Handlebars (home, cart, profile, password, etc.)
+server.js           # punto de entrada
 ```
 
-## 👤 Modelo de Usuario
 
-El modelo de usuario (`user.model.js`) incluye:
 
-- `first_name`, `last_name`, `email`, `age`, `password` (hasheada)
-- `cart`: referencia a `Cart`
-- `role`: `"user"` o `"admin"` dependiendo del email (`@coder.com`)
+## 🔐 Autenticación y autorización
 
-La contraseña se encripta automáticamente antes de guardar con `bcryptjs`.
+- **Estrategias**:
+  - `registro` y `login` (local)
+  - `current` (JWT tomado de cookie `cookieToken`)
+- **Roles**:
+  - `admin` (emails `@coder.com`)
+  - `user` (resto)
+- **DTO `/current`**: expone solo campos no sensibles (`_id, first_name, last_name, role, cart, email* si lo necesitás`).
 
-## 🔐 Autenticación y Autorización
+---
 
-Se utilizan estrategias Passport:
+## 🔌 Endpoints principales
 
-- `login`: Verifica email/contraseña y genera un JWT
-- `current`: Extrae el usuario desde el JWT almacenado en la cookie `cookieToken`
+### Sessions (`/api/sessions`)
+- `POST   /register` → Registro (201)
+- `POST   /login` → Login (setea cookie JWT) (200)
+- `GET    /current` → Requiere `passportCall("current")` (200, DTO)
+- `GET    /logout` → Limpia cookie (200)
+- `PUT    /cart` → Asocia un carrito al usuario autenticado (200)
+- `POST   /forgot-password` → Envía link de reset (200)
+- `POST   /reset-password` → Cambia password (200)
 
-El token JWT se guarda en una cookie HTTP Only segura.
+### Products (`/api/products`)
+- `GET    /` → Lista paginada (`page, limit, sort, query`)
+- `GET    /:id`
+- `POST   /` → **admin**
+- `PUT    /:id` → **admin**
+- `DELETE /:id` → **admin**
 
-## 📌 Rutas principales
+### Carts (`/api/carts`)
+- `POST   /` → Crear carrito (201)
+- `GET    /:cid` → (con `populate` desde service)
+- `POST   /:cid/products/:pid`  ({ qty })
+- `PUT    /:cid/products/:pid`  ({ quantity })
+- `DELETE /:cid/products/:pid`
+- `DELETE /:cid` → Vaciar
+- `PUT    /:cid/status` ({ status }) → `activo | comprado | cancelado`
+  - Si pasa a **`comprado`**: valida **stock**, **descuenta**, marca carrito como **comprado** y crea **Ticket**
+- `GET    /:cid/totals` → Totales (cantidad y monto)
 
-- `POST /api/users/register` → Registro de usuarios
-- `POST /api/users/login` → Login de usuario (genera JWT)
-- `GET /api/sessions/current` → Devuelve datos del usuario autenticado
-- `GET /api/users/logout` → Borra la cookie y desloguea al usuario
+### Tickets (`/api/tickets`)
+- `GET /` → Lista de tickets del usuario autenticado
+- `GET /:tid` → Ticket por id (dueño o admin)
 
-## 🧪 Scripts
+### Vistas (Handlebars)
+- `/` → Home (Auth)
+- `/realtimeproducts` → RealTime (Auth + Admin)
+- `/carts/:cid` → Carrito (Auth)
+- `/profile` → Perfil (Auth)
+- `/login`, `/register`, `/forgot-password`, `/password` (reset)
+
+---
+
+## 🧭 Arquitectura por capas
+
+- **Model**: Schemas Mongoose.
+- **DAO**: Queries a BD.
+- **Repository**: Envuelve el DAO (permite cambiar la persistencia sin tocar Services).
+- **Service**: Reglas de negocio (validaciones, stock, compra, etc.).
+- **Controller**: Traduce HTTP ↔ Service (status, JSON, render).
+- **Routes**: Declaran endpoints y middlewares.
+- **DTO**: Sanitiza datos salientes (no exponer `password`, etc.).
+
+---
+
+## 🧬 DTO de Usuario
+
+
+## 📬 Recuperación de contraseña (simple)
+
+- `POST /api/sessions/forgot-password`: genera **JWT efímero (1h)** y envía link `APP_BASE_URL/password?token=...`.
+- `POST /api/sessions/reset-password`: valida token, evita repetir la misma password y actualiza.
+
+
+
+## ⚙️ Requisitos & Scripts
+
+**Requisitos**: Node 18+ y MongoDB en ejecución.
 
 ```bash
-npm install     # Instala dependencias
-npm run dev     # Ejecuta el servidor con nodemon
+# Instalación
+npm install
+
+# Desarrollo
+npm run dev       # nodemon
+
+# Producción
+npm start
 ```
 
-## 📬 Postman
+---
 
-Se incluye la colección Postman para testear las rutas en:  
-`Curso_Backend_pisano.postman_collection.json`
+## 🧪 E2E (opcional)
 
-## ✅ Estado del proyecto
+Archivo `e2e.test.js` (HTTP con cookies) que:
+- Crea usuarios (user/admin), testea roles y auth.
+- Valida errores comunes (ids inválidos, body vacío, duplicados).
+- Prueba carritos (agregar, actualizar, vaciar).
+- Ejecuta compra: valida y **descuenta stock**.
+- Verifica **ticket** generado y endpoints `/api/tickets`.
 
-- [x] Modelo de usuario implementado con todos los campos requeridos
-- [x] Contraseña encriptada correctamente
-- [x] Estrategias Passport funcionando (login y current)
-- [x] Token JWT emitido y almacenado en cookie
-- [x] Ruta `/api/sessions/current` funcionando
-- [x] Uso correcto de middlewares para proteger rutas privadas
+Ejecutar (con server levantado):
+```bash
+node e2e.test.js
+# o
+BASE_URL=http://localhost:8080 node e2e.test.js
+```
+
+---
+
+## 🔄 Flujo de compra
+
+1. Cliente arma carrito.
+2. `PUT /api/carts/:cid/status` con `{ status: "comprado" }`.
+3. Service valida stock de cada ítem, **descuenta** el stock, marca carrito como **comprado**.
+4. Crea **Ticket** con total, método de pago, `cartId`, `userId`.
+5. Respuesta `{ cart, ticket }`.
+
+---
+
+## 🧰 Middlewares útiles
+
+- `passportCall("current")` → JWT auth por cookie.
+- `authAdmin` / `authAdminView` → `req.user.role === 'admin'`.
+- `ensureObjectId` → 400 si el id no es válido.
+- `errorHandler` → mapea errores de Mongo/validación y cualquier `err.status`.
+
+---
+
+## 🪲 Troubleshooting
+
+- **Mailer 500**: verificá `SMTP_*` y `FROM_EMAIL`; si usás Gmail, activá *App Passwords* y usá esa clave.
+- **JWT 401**: asegurate de setear cookie en login y enviar cookie en requests.
+- **CastError (ObjectId)**: usá `ensureObjectId` → responde 400.
+- **RealTime sin actualizar**: el server debe emitir `io.emit("products", updated)` y el cliente escuchar `socket.on("products", ...)`.
+- **/current filtrado**: devolvé `new UserDTO(user)`.
 
 ---
 
 ## 📎 Autor
 
-Mariano Pisano  
-Entrega correspondiente al curso Backend II
+**Mariano Pisano**  
+Proyecto del curso **Backend II** — refactor con DAO/Repository/Service/Controller, DTOs, tickets, recuperación de contraseña, Socket.io y vistas Handlebars.
